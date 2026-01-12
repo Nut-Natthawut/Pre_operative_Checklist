@@ -1,8 +1,6 @@
-'use client';
-
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { api } from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { api } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
     id: string;
@@ -26,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
+    const navigate = useNavigate();
 
     const refreshUser = async () => {
         const token = api.getToken();
@@ -62,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = () => {
         api.logout();
         setUser(null);
-        router.push('/login');
+        navigate('/login');
     };
 
     return (

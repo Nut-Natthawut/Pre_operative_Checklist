@@ -1,10 +1,7 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/lib/api';
-import Link from 'next/link';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 
 interface LogData {
     id: string;
@@ -16,24 +13,23 @@ interface LogData {
 
 export default function DashboardPage() {
     const { user, isLoggedIn, isLoading, isAdmin, logout } = useAuth();
-    const router = useRouter();
+    const navigate = useNavigate();
     const [logs, setLogs] = useState<LogData[]>([]);
     const [isLoadingLogs, setIsLoadingLogs] = useState(true);
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]); // Default today
+    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
-            router.push('/login');
+            navigate('/login');
         }
-    }, [isLoggedIn, isLoading, router]);
+    }, [isLoggedIn, isLoading, navigate]);
 
-    // Fetch logs when user is logged in
     useEffect(() => {
         if (isLoggedIn && user) {
             const timeoutId = setTimeout(() => {
                 fetchLogs();
-            }, 500); // 500ms debounce
+            }, 500);
             return () => clearTimeout(timeoutId);
         }
     }, [isLoggedIn, user, filterDate, searchTerm]);
@@ -42,13 +38,11 @@ export default function DashboardPage() {
         setIsLoadingLogs(true);
         try {
             if (searchTerm) {
-                // Search mode
                 const response = await api.searchForms(searchTerm);
                 if (response.success && response.data) {
                     setLogs(response.data.results);
                 }
             } else {
-                // Filter mode
                 const response = await api.listForms(1, 100, filterDate);
                 if (response.success && response.data) {
                     setLogs(response.data.forms);
@@ -86,7 +80,6 @@ export default function DashboardPage() {
             ),
             color: 'bg-green-500 hover:bg-green-600',
         },
-
     ];
 
     if (isAdmin) {
@@ -105,26 +98,18 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            {/* Header */}
             <header className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800">
-                            รายงานการเตรียมผู้ป่วยก่อนผ่าตัด
-                        </h1>
+                        <h1 className="text-xl font-bold text-gray-800">รายงานการเตรียมผู้ป่วยก่อนผ่าตัด</h1>
                         <p className="text-sm text-gray-500">โรงพยาบาลมหาราชนครเชียงใหม่</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
                             <p className="font-medium text-gray-800">{user?.fullName}</p>
-                            <p className="text-sm text-gray-500">
-                                {user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}
-                            </p>
+                            <p className="text-sm text-gray-500">{user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</p>
                         </div>
-                        <button
-                            onClick={logout}
-                            className="btn-secondary flex items-center gap-2"
-                        >
+                        <button onClick={logout} className="btn-secondary flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
@@ -134,15 +119,10 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {menuItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="card hover:shadow-xl transition-shadow duration-300 group"
-                        >
+                        <Link key={item.href} to={item.href} className="card hover:shadow-xl transition-shadow duration-300 group">
                             <div className={`w-16 h-16 ${item.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
                                 {item.icon}
                             </div>
@@ -152,7 +132,6 @@ export default function DashboardPage() {
                     ))}
                 </div>
 
-                {/* Log & Filter Section */}
                 <div className="mt-8 card">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -200,25 +179,13 @@ export default function DashboardPage() {
                             <tbody className="divide-y divide-gray-100">
                                 {isLoadingLogs ? (
                                     <tr>
-                                        <td colSpan={4} className="py-8 text-center text-gray-500">
-                                            กำลังโหลดข้อมูล...
-                                        </td>
+                                        <td colSpan={4} className="py-8 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 ) : logs.length > 0 ? (
                                     logs.map((log) => (
-                                        <tr
-                                            key={log.id}
-                                            className="hover:bg-blue-50 transition-colors cursor-pointer"
-                                            onClick={() => router.push(`/form/${log.id}`)}
-                                        >
+                                        <tr key={log.id} className="hover:bg-blue-50 transition-colors cursor-pointer" onClick={() => navigate(`/form/${log.id}`)}>
                                             <td className="py-3 px-4 text-gray-800">
-                                                {new Date(log.createdAt).toLocaleDateString('th-TH', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
+                                                {new Date(log.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td className="py-3 px-4 text-gray-800 font-medium text-blue-600">{log.hn}</td>
                                             <td className="py-3 px-4 text-gray-800">{log.patientName}</td>
@@ -237,7 +204,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Quick Stats */}
                 <div className="mt-8 card">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">ข้อมูลระบบ</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -246,7 +212,7 @@ export default function DashboardPage() {
                             <p className="text-sm text-gray-500">รหัสแบบฟอร์ม</p>
                         </div>
                         <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <p className="text-2xl font-bold text-green-600">v1.0.0</p>
+                            <p className="text-2xl font-bold text-green-600">v2.0.0</p>
                             <p className="text-sm text-gray-500">เวอร์ชัน</p>
                         </div>
                         <div className="text-center p-4 bg-purple-50 rounded-lg">

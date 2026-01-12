@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hospital-form-api.testdeveloper.workers.dev';
+// API Client for Hospital Form - Vite version
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hospital-form-api.testdeveloper.workers.dev';
 
 interface ApiResponse<T = unknown> {
   success: boolean;
