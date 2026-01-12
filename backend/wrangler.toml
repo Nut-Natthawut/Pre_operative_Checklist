@@ -1,0 +1,14 @@
+name = "hospital-form-api"
+main = "index.ts"
+compatibility_date = "2024-05-01"
+account_id = "23879de1c6718460c177ee3a61a839d1"
+
+[vars]
+JWT_SECRET = "hospital-form-secret-change-in-production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hospital-forms-db"
+database_id = "cb255859-9023-47d8-bdf8-21fdf4c62585"
+migrations_dir = "drizzle"
+
