@@ -182,16 +182,42 @@ export default function DashboardPage() {
                                         <td colSpan={4} className="py-8 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 ) : logs.length > 0 ? (
-                                    logs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-blue-50 transition-colors cursor-pointer" onClick={() => navigate(`/form/${log.id}`)}>
-                                            <td className="py-3 px-4 text-gray-800">
-                                                {new Date(log.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                            </td>
-                                            <td className="py-3 px-4 text-gray-800 font-medium text-blue-600">{log.hn}</td>
-                                            <td className="py-3 px-4 text-gray-800">{log.patientName}</td>
-                                            <td className="py-3 px-4 text-gray-600">{log.ward || '-'}</td>
-                                        </tr>
-                                    ))
+                                    logs.reduce((acc: React.ReactNode[], log, index, array) => {
+                                        const logDate = new Date(log.createdAt);
+                                        const dateStr = logDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                                        const prevLog = index > 0 ? array[index - 1] : null;
+                                        const prevDateStr = prevLog ? new Date(prevLog.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+                                        // Add Date Header if date changes
+                                        if (dateStr !== prevDateStr) {
+                                            acc.push(
+                                                <tr key={`header-${dateStr}`} className="bg-gray-100/50">
+                                                    <td colSpan={4} className="py-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider relative">
+                                                        <div className="flex items-center gap-2">
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            {dateStr}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+
+                                        acc.push(
+                                            <tr key={log.id} className="hover:bg-blue-50 transition-colors cursor-pointer group" onClick={() => navigate(`/form/${log.id}`)}>
+                                                <td className="py-3 px-4 text-gray-800 border-l-4 border-transparent group-hover:border-blue-500 pl-3">
+                                                    {logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
+                                                </td>
+                                                <td className="py-3 px-4 text-gray-800 font-medium text-blue-600 group-hover:underline">{log.hn}</td>
+                                                <td className="py-3 px-4 text-gray-800">{log.patientName}</td>
+                                                <td className="py-3 px-4 text-gray-600 bg-gray-50/30 rounded-r-lg group-hover:bg-transparent">{log.ward || '-'}</td>
+                                            </tr>
+                                        );
+
+                                        return acc;
+                                    }, [])
                                 ) : (
                                     <tr>
                                         <td colSpan={4} className="py-8 text-center text-gray-500">
