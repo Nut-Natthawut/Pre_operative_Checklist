@@ -225,11 +225,65 @@ formRoutes.get('/', async (c) => {
         formDate: preopForms.formDate,
         formTime: preopForms.formTime,
         createdAt: preopForms.createdAt,
+        // Fetch fields for status calculation
+        resultOr: preopForms.resultOr,
+        anesLab: preopForms.anesLab,
+        attendingPhysician: preopForms.attendingPhysician,
+        preparer: preopForms.preparer,
       })
       .from(preopForms)
       .limit(limit)
       .offset(offset)
       .all();
+
+    // Calculate Status for each form
+    const formsWithStatus = forms.map(form => {
+        let status: 'green' | 'yellow' | 'red' = 'red';
+        let statusMessage = '';
+
+        try {
+            const resultOr = form.resultOr ? JSON.parse(form.resultOr) : {};
+            const anesLab = form.anesLab ? JSON.parse(form.anesLab) : {};
+
+            if (resultOr.complete) {
+                status = 'green';
+                statusMessage = `ผู้เตรียม: ${form.preparer || 'พยาบาล'}`;
+            } else {
+                // Logic for Yellow
+                const isLabIncomplete = (!anesLab.labCbc && !anesLab.labUa && !anesLab.labElectrolyte && !anesLab.labPtPtt && !anesLab.labOther); 
+                // Or simplified: if user hasn't checked *any* major lab? Or specific ones? 
+                // Let's assume if *all* major labs are unchecked, it might be waiting for lab?
+                // Or maybe if some are checked but not all?
+                // User said: "รอผลตรวจเลือดอยู่" implies we know they are waiting.
+                // Let's stick to simple logic: If Result is NOT complete:
+                
+                if (!form.attendingPhysician) {
+                    status = 'yellow';
+                    statusMessage = 'รอรายงานแพทย์';
+                } else if (resultOr.notComplete) {
+                   status = 'yellow';
+                   statusMessage = 'ยังไม่พร้อม (ตรวจสอบแล้ว)';
+                } else {
+                    // Default Red (Not started / In progress but vague)
+                    status = 'red';
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing form data for status:', e);
+            status = 'red';
+        }
+
+        return {
+            ...form,
+            status,
+            statusMessage,
+            // Remove raw JSON strings to save bandwidth if not needed, 
+            // but Frontend might not need them anyway. Keep them or omit?
+            // Let's keep specific fields clean.
+            resultOr: undefined,
+            anesLab: undefined
+        };
+    });
     
     return c.json({
       success: true,
@@ -238,7 +292,7 @@ formRoutes.get('/', async (c) => {
         page,
         limit,
         count: forms.length,
-        forms,
+        forms: formsWithStatus,
       }
     });
   } catch (error) {
