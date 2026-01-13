@@ -344,6 +344,10 @@ export default function ViewFormPage() {
             const [rowKey, field] = subPath.split('.');
             const row = originalData.rows[rowKey as keyof typeof originalData.rows];
             if (!row) return false;
+
+            // If preparer has value, lock the entire row
+            if (row.preparer) return true;
+
             const val = row[field as keyof typeof row];
             return !!val; // true if had value
         }
@@ -913,27 +917,27 @@ export default function ViewFormPage() {
                                 <div>11. ผลตรวจห้องปฏิบัติการ</div>
                                 <div className="ml-3 mt-1 space-y-1">
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labCbc') ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labCbc} onChange={e => updateInner('labCbc', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labCbc')} /> CBC
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labCbc} onChange={e => updateInner('labCbc', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> CBC
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labUa') ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labUa} onChange={e => updateInner('labUa', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labUa')} /> UA
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labUa} onChange={e => updateInner('labUa', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> UA
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labElectrolyte') ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labElectrolyte} onChange={e => updateInner('labElectrolyte', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labElectrolyte')} /> Electrolyte
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labElectrolyte} onChange={e => updateInner('labElectrolyte', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> Electrolyte
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labPtPtt') ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labPtPtt} onChange={e => updateInner('labPtPtt', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labPtPtt')} /> PT,PTT,INR
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labPtPtt} onChange={e => updateInner('labPtPtt', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> PT,PTT,INR
                                         </label>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <label className={`flex items-center gap-2 whitespace-nowrap ${isEditable && !isLocked('innerData', 'labOther') ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labOther} onChange={e => updateInner('labOther', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labOther')} /> อื่น ๆ
+                                        <label className={`flex items-center gap-2 whitespace-nowrap ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labOther} onChange={e => updateInner('labOther', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> อื่น ๆ
                                         </label>
-                                        <input className="border-b border-dotted border-black flex-1 outline-none ml-1" value={formData.innerData.labOtherDetail} onChange={e => updateInner('labOtherDetail', e.target.value)} disabled={!isEditable || isLocked('innerData', 'labOtherDetail')} />
+                                        <input className="border-b border-dotted border-black flex-1 outline-none ml-1" value={formData.innerData.labOtherDetail} onChange={e => updateInner('labOtherDetail', e.target.value)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} />
                                     </div>
-                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labFilm') ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labFilm')} /> Film/PACs
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> Film/PACs
                                     </label>
                                 </div>
                             </td>
@@ -948,7 +952,7 @@ export default function ViewFormPage() {
                                     style={{ backgroundImage: 'repeating-linear-gradient(transparent, transparent 1.5rem, #ccc 1.5rem, #ccc calc(1.5rem + 1px))', backgroundAttachment: 'local', lineHeight: '1.5rem' }}
                                     value={formData.innerData.medsDetail}
                                     onChange={e => updateInner('medsDetail', e.target.value)}
-                                    disabled={!isEditable || isLocked('innerData', 'medsDetail')}
+                                    disabled={!isEditable || isLocked('rows', 'row12.preparer')}
                                 ></textarea>
                             </td>
                             {renderGridCells('row12')}
