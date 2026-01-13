@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 
 import { toast } from 'sonner';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // ข้อมูลเริ่มต้นของฟอร์ม
 const initialFormData = {
@@ -104,12 +106,14 @@ const initialFormData = {
 type FormData = typeof initialFormData;
 
 export default function ViewFormPage() {
-    const { isLoggedIn, isLoading: authLoading } = useAuth();
+    const { isLoggedIn, isLoading: authLoading, isAdmin } = useAuth();
     const navigate = useNavigate();
     const params = useParams();
     const formId = params.id as string;
 
     const [formData, setFormData] = useState<FormData>(initialFormData);
+    // Store original data loaded from DB to lock existing fields
+    const [originalData, setOriginalData] = useState<FormData | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -148,9 +152,16 @@ export default function ViewFormPage() {
                         fYear = (dateObj.getFullYear() + 543).toString();
                     }
 
-                    // Check if editable (Not Complete)
+
                     const resultOr = backendData.resultOr || initialFormData.result;
-                    const canEdit = resultOr.notComplete === true;
+                    // Check if editable:
+                    // 1. If Admin -> Always editable
+                    // 2. If User -> Only editable if Checkbox 'Complete' is NOT checked
+                    // Note: isLocked logic still applies for existing fields even if editable.
+                    let canEdit = true;
+                    if (resultOr.complete && !isAdmin) {
+                        canEdit = false;
+                    }
                     setIsEditable(canEdit);
 
                     // Map fields back
@@ -198,7 +209,111 @@ export default function ViewFormPage() {
                             medsDetail: backendData.premedication || '',
                         },
 
-                        result: resultOr,
+                        result: (() => {
+                            // Transform checkDate to Thai format if needed
+                            const transformedResult = { ...resultOr };
+                            if (resultOr.checkDate) {
+                                const dateStr = resultOr.checkDate;
+                                let parsedDate: Date | null = null;
+
+                                // Check if it's ISO format (2026-01-13)
+                                if (dateStr.includes('-')) {
+                                    parsedDate = new Date(dateStr);
+                                }
+                                // Check if it's in slash format
+                                else if (dateStr.includes('/')) {
+                                    const parts = dateStr.split('/');
+                                    if (parts.length === 3) {
+                                        const first = parseInt(parts[0]);
+                                        const second = parseInt(parts[1]);
+                                        const third = parseInt(parts[2]);
+
+                                        // If third part is > 2500, it's already Thai year
+                                        if (third > 2500) {
+                                            // Already in DD/MM/พ.ศ. format, return as is
+                                            return transformedResult;
+                                        } else {
+                                            // It's in some format with ค.ศ.
+                                            // Try MM/DD/YYYY first (if first <= 12)
+                                            if (first <= 12 && second <= 31) {
+                                                parsedDate = new Date(third, first - 1, second);
+                                            } else {
+                                                // DD/MM/YYYY
+                                                parsedDate = new Date(third, second - 1, first);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                                    const day = parsedDate.getDate();
+                                    const month = parsedDate.getMonth() + 1;
+                                    const year = parsedDate.getFullYear() + 543;
+                                    transformedResult.checkDate = `${day}/${month}/${year}`;
+                                }
+                            }
+                            return transformedResult;
+                        })(),
+                    });
+
+                    // Set original data for locking logic
+                    setOriginalData({
+                        formDate: fDate,
+                        formMonth: fMonth,
+                        formYear: fYear,
+
+                        patientName: backendData.patientName || '',
+                        sex: backendData.sex || '',
+                        age: backendData.age || '',
+                        allergy: backendData.allergy || '',
+                        ward: backendData.ward || '',
+                        hn: backendData.hn || '',
+                        an: backendData.an || '',
+                        bed: backendData.bed || '',
+                        diagnosis: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).diagnosis || '') : '',
+                        operation: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).operation || '') : '',
+                        physician: backendData.attendingPhysician || '',
+
+                        rows: backendData.orChecklist || initialFormData.rows,
+
+                        innerData: {
+                            valuablesRemoved: backendData.riskConditions?.valuablesRemoved || false,
+                            valuablesFixed: backendData.riskConditions?.valuablesFixed || false,
+
+                            consentAdult: backendData.consentData?.consentAdult || false,
+                            consentMarried: backendData.consentData?.consentMarried || false,
+                            consentChild: backendData.consentData?.consentChild || false,
+                            consentChildGuardian: backendData.consentData?.consentChildGuardian || '',
+
+                            npoSolid: backendData.npoData?.npoSolid || false,
+                            npoLiquid: backendData.npoData?.npoLiquid || false,
+
+                            ivFluidDetail: backendData.ivData?.ivFluidDetail || '',
+
+                            labCbc: backendData.anesLab?.labCbc || false,
+                            labUa: backendData.anesLab?.labUa || false,
+                            labElectrolyte: backendData.anesLab?.labElectrolyte || false,
+                            labPtPtt: backendData.anesLab?.labPtPtt || false,
+                            labOther: backendData.anesLab?.labOther || false,
+                            labOtherDetail: backendData.anesLab?.labOtherDetail || '',
+                            labFilm: backendData.anesLab?.labFilm || false,
+
+                            medsDetail: backendData.premedication || '',
+                        },
+
+                        result: (() => {
+                            // Same transform logic just to match structural consistency
+                            const transformedResult = { ...resultOr };
+                            if (resultOr.checkDate) {
+                                // (Re-use parsing logic or just keep string if strictly checking value)
+                                // For locking, exact string match or truthy check is enough.
+                                // Let's use the final formatted value if possible or just use backend value.
+                                // Simpler: just copy what we set to formData.
+                                // Ideally we should extract the transform logic to a function but for now duplicating the end result object is safer.
+                                return transformedResult;
+                            }
+                            return transformedResult;
+                        })()
                     });
                 }
             } catch (err) {
@@ -215,6 +330,41 @@ export default function ViewFormPage() {
     }, [formId, isLoggedIn]);
 
     // Helpers
+
+    // Helper to check if a field is locked (had value in originalData)
+    // Admin ignores lock (can edit everything)
+    const isLocked = (path: string, subPath?: string) => {
+        if (isAdmin) return false;
+        if (!originalData) return false;
+
+        if (path === 'rows') {
+            // Usage: isLocked('rows', 'row1.yes') 
+            if (!subPath) return false;
+            // subPath e.g. 'row1.yes'
+            const [rowKey, field] = subPath.split('.');
+            const row = originalData.rows[rowKey as keyof typeof originalData.rows];
+            if (!row) return false;
+            const val = row[field as keyof typeof row];
+            return !!val; // true if had value
+        }
+
+        if (path === 'innerData') {
+            if (!subPath) return false;
+            const val = originalData.innerData[subPath as keyof typeof originalData.innerData];
+            return !!val;
+        }
+
+        if (path === 'result') {
+            if (!subPath) return false;
+            // originalData.result is our structured object
+            const val = (originalData.result as any)[subPath];
+            return !!val;
+        }
+
+        // Top level fields
+        const val = (originalData as any)[path];
+        return !!val;
+    };
     const updateField = (field: string, value: unknown) => {
         if (!isEditable) return;
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -275,10 +425,7 @@ export default function ViewFormPage() {
         return now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     };
 
-    const fillRowTime = (rowKey: string) => {
-        if (!isEditable) return;
-        updateRow(rowKey, 'time', getCurrentTime());
-    };
+
 
     const handleUpdate = () => {
         setShowConfirmModal(true);
@@ -377,6 +524,14 @@ export default function ViewFormPage() {
 
         const handleYesNoChange = (value: 'yes' | 'no') => {
             if (!isEditable) return;
+            // Check Lock
+            const lockedYes = isLocked('rows', `${rowKey}.yes`);
+            const lockedNo = isLocked('rows', `${rowKey}.no`);
+            // If either is locked, preventing changing this toggle group?? 
+            // Or just specific check? If 'Yes' is locked as True, we can't uncheck it (change to No).
+            // Actually simplest is: if either Yes or No has original value, the whole choice is locked.
+            if (lockedYes || lockedNo) return;
+
             if (value === 'yes') {
                 updateRow(rowKey, 'yes', true);
                 updateRow(rowKey, 'no', false);
@@ -389,7 +544,7 @@ export default function ViewFormPage() {
         return (
             <>
                 <td
-                    className={`border-r border-black p-1 text-center ${isEditable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                    className={`border-r border-black p-1 text-center ${isEditable && !isLocked('rows', `${rowKey}.yes`) && !isLocked('rows', `${rowKey}.no`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                     rowSpan={rowSpan}
                     onClick={() => handleYesNoChange('yes')}
                 >
@@ -400,12 +555,12 @@ export default function ViewFormPage() {
                             className="w-4 h-4 pointer-events-none"
                             checked={rowData.yes === true}
                             readOnly
-                            disabled={!isEditable}
+                            disabled={!isEditable || isLocked('rows', `${rowKey}.yes`) || isLocked('rows', `${rowKey}.no`)}
                         />
                     </div>
                 </td>
                 <td
-                    className={`border-r border-black p-1 text-center ${isEditable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                    className={`border-r border-black p-1 text-center ${isEditable && !isLocked('rows', `${rowKey}.yes`) && !isLocked('rows', `${rowKey}.no`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                     rowSpan={rowSpan}
                     onClick={() => handleYesNoChange('no')}
                 >
@@ -416,45 +571,80 @@ export default function ViewFormPage() {
                             className="w-4 h-4 pointer-events-none"
                             checked={rowData.no === true}
                             readOnly
-                            disabled={!isEditable}
+                            disabled={!isEditable || isLocked('rows', `${rowKey}.yes`) || isLocked('rows', `${rowKey}.no`)}
                         />
                     </div>
                 </td>
                 <td
-                    className={`border-r border-black p-0 text-center align-middle group ${isEditable ? 'cursor-text' : ''}`}
+                    className={`border-r border-black p-0 text-center align-middle group relative ${isEditable && !isLocked('rows', `${rowKey}.time`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                     rowSpan={rowSpan}
+                    onClick={(e) => {
+                        if (!isEditable || isLocked('rows', `${rowKey}.time`)) return;
+                        const input = e.currentTarget.querySelector('input');
+                        if (input) {
+                            input.focus();
+                            if ('showPicker' in input) {
+                                try {
+                                    (input as any).showPicker();
+                                } catch (error) {
+                                    // Ignore
+                                }
+                            }
+                        }
+                    }}
                 >
-                    <div className="flex items-center justify-center w-full h-full p-1 gap-1">
+                    <div className="w-full h-full relative min-h-[24px]">
+                        {/* 1. Display Text (Absolute Center) */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className={`${!rowData.time ? 'text-transparent' : 'text-black'}`}>
+                                {rowData.time || '--:--'}
+                            </span>
+                        </div>
+
+                        {/* 2. Invisible Input Overlay (For clicking) */}
                         <input
-                            type="text"
-                            className="flex-1 text-center outline-none bg-transparent min-w-0"
+                            type="time"
+                            className="absolute inset-0 w-full h-full z-10"
                             value={rowData.time}
                             onChange={e => updateRow(rowKey, 'time', e.target.value)}
-                            disabled={!isEditable}
+                            disabled={!isEditable || isLocked('rows', `${rowKey}.time`)}
+                            style={{ opacity: 0, cursor: (isEditable && !isLocked('rows', `${rowKey}.time`)) ? 'pointer' : 'default' }}
                         />
-                        {isEditable && (
+
+                        {/* 3. Clear Button (Top layer) */}
+                        {isEditable && !isLocked('rows', `${rowKey}.time`) && rowData.time && (
                             <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); fillRowTime(rowKey); }}
-                                className="opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-blue-100 hover:bg-blue-200 rounded transition-opacity print:hidden"
-                                title="เวลาปัจจุบัน"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateRow(rowKey, 'time', '');
+                                }}
+                                className="absolute right-0.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 z-20 p-1 rounded-full hover:bg-gray-100"
+                                title="ลบเวลา"
                             >
-                                🕐
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         )}
                     </div>
                 </td>
+
+
                 <td
-                    className={`p-0 text-center align-middle ${isEditable ? 'cursor-text hover:bg-blue-50' : ''}`}
+                    className={`p-0 text-center align-middle ${isEditable && !isLocked('rows', `${rowKey}.preparer`) ? 'cursor-text hover:bg-blue-50' : ''}`}
                     rowSpan={rowSpan}
+                    onClick={(e) => {
+                        if (!isEditable || isLocked('rows', `${rowKey}.preparer`)) return;
+                        const input = e.currentTarget.querySelector('input');
+                        if (input) input.focus();
+                    }}
                 >
-                    <div className="flex items-center justify-center w-full h-full p-2">
+                    <div className="w-full h-full p-2">
                         <input
                             type="text"
-                            className="w-full text-center outline-none bg-transparent"
+                            className="w-full h-full text-center outline-none bg-transparent"
                             value={rowData.preparer}
                             onChange={e => updateRow(rowKey, 'preparer', e.target.value)}
-                            disabled={!isEditable}
+                            disabled={!isEditable || isLocked('rows', `${rowKey}.preparer`)}
                         />
                     </div>
                 </td>
@@ -493,12 +683,12 @@ export default function ViewFormPage() {
                     <h2 className="text-base font-bold mt-2">แบบสำรวจผู้ป่วยก่อนเข้าห้องผ่าตัด</h2>
                     <div className="flex justify-center items-end mt-4 text-sm gap-2 group">
                         <span>วันที่</span>
-                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formDate} onChange={e => updateField('formDate', e.target.value)} disabled={!isEditable} />
+                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formDate} onChange={e => updateField('formDate', e.target.value)} disabled={!isEditable || isLocked('formDate')} />
                         <span>เดือน</span>
-                        <input className="border-b border-dotted border-black w-32 text-center outline-none" value={formData.formMonth} onChange={e => updateField('formMonth', e.target.value)} disabled={!isEditable} />
+                        <input className="border-b border-dotted border-black w-32 text-center outline-none" value={formData.formMonth} onChange={e => updateField('formMonth', e.target.value)} disabled={!isEditable || isLocked('formMonth')} />
                         <span>พ.ศ.</span>
-                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formYear} onChange={e => updateField('formYear', e.target.value)} disabled={!isEditable} />
-                        {isEditable && (
+                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formYear} onChange={e => updateField('formYear', e.target.value)} disabled={!isEditable || isLocked('formYear')} />
+                        {isEditable && !isLocked('formDate') && (
                             <button
                                 type="button"
                                 onClick={fillCurrentDate}
@@ -518,25 +708,25 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-2" style={{ width: '35%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Name:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.patientName} onChange={e => updateField('patientName', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.patientName} onChange={e => updateField('patientName', e.target.value)} disabled={!isEditable || isLocked('patientName')} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Sex:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.sex} onChange={e => updateField('sex', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.sex} onChange={e => updateField('sex', e.target.value)} disabled={!isEditable || isLocked('sex')} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Age:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.age} onChange={e => updateField('age', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.age} onChange={e => updateField('age', e.target.value)} disabled={!isEditable || isLocked('age')} />
                                 </div>
                             </td>
                             <td className="px-2 py-2" style={{ width: '25%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">แพ้ยา:</span>
-                                    <input className="flex-1 outline-none min-w-0 text-red-600 bg-transparent border-b border-dotted border-black" value={formData.allergy} onChange={e => updateField('allergy', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.allergy} onChange={e => updateField('allergy', e.target.value)} disabled={!isEditable || isLocked('allergy')} />
                                 </div>
                             </td>
                         </tr>
@@ -544,25 +734,25 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Ward:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.ward} onChange={e => updateField('ward', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.ward} onChange={e => updateField('ward', e.target.value)} disabled={!isEditable || isLocked('ward')} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">HN:</span>
-                                    <input className="flex-1 outline-none min-w-0 font-bold bg-transparent border-b border-dotted border-black" value={formData.hn} onChange={e => updateField('hn', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 font-bold bg-transparent border-b border-dotted border-black" value={formData.hn} onChange={e => updateField('hn', e.target.value)} disabled={!isEditable || isLocked('hn')} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">AN:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.an} onChange={e => updateField('an', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.an} onChange={e => updateField('an', e.target.value)} disabled={!isEditable || isLocked('an')} />
                                 </div>
                             </td>
                             <td className="px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Bed:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.bed} onChange={e => updateField('bed', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.bed} onChange={e => updateField('bed', e.target.value)} disabled={!isEditable || isLocked('bed')} />
                                 </div>
                             </td>
                         </tr>
@@ -570,19 +760,19 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-2" colSpan={2}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Diagnosis:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.diagnosis} onChange={e => updateField('diagnosis', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.diagnosis} onChange={e => updateField('diagnosis', e.target.value)} disabled={!isEditable || isLocked('diagnosis')} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Operation:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.operation} onChange={e => updateField('operation', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.operation} onChange={e => updateField('operation', e.target.value)} disabled={!isEditable || isLocked('operation')} />
                                 </div>
                             </td>
                             <td className="px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Physician:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.physician} onChange={e => updateField('physician', e.target.value)} disabled={!isEditable} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.physician} onChange={e => updateField('physician', e.target.value)} disabled={!isEditable || isLocked('physician')} />
                                 </div>
                             </td>
                         </tr>
@@ -661,12 +851,12 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-3 align-top">
                                 <div>6. ของมีค่า/ฟันปลอม</div>
                                 <div className="ml-3 mt-1 space-y-1">
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.valuablesRemoved} onChange={e => updateInner('valuablesRemoved', e.target.checked)} disabled={!isEditable} />
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'valuablesRemoved') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.valuablesRemoved} onChange={e => updateInner('valuablesRemoved', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'valuablesRemoved')} />
                                         <span>ถอดออกแล้ว</span>
                                     </label>
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.valuablesFixed} onChange={e => updateInner('valuablesFixed', e.target.checked)} disabled={!isEditable} />
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'valuablesFixed') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.valuablesFixed} onChange={e => updateInner('valuablesFixed', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'valuablesFixed')} />
                                         <span>ติดแน่นไม่สามารถถอดออกได้</span>
                                     </label>
                                 </div>
@@ -695,12 +885,12 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-3 align-top">
                                 <div>9. NPO</div>
                                 <div className="ml-3 mt-1 flex flex-col gap-1">
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoSolid} onChange={e => updateInner('npoSolid', e.target.checked)} disabled={!isEditable} />
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'npoSolid') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoSolid} onChange={e => updateInner('npoSolid', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'npoSolid')} />
                                         <span>อาหาร/นม/ครีมเหลว &gt; 6 ชม.</span>
                                     </label>
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoLiquid} onChange={e => updateInner('npoLiquid', e.target.checked)} disabled={!isEditable} />
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'npoLiquid') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoLiquid} onChange={e => updateInner('npoLiquid', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'npoLiquid')} />
                                         <span>น้ำ/น้ำหวาน &gt;2-3 ชม.</span>
                                     </label>
                                 </div>
@@ -712,7 +902,7 @@ export default function ViewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-3">
                                 <div className="flex items-center">
                                     <span>10. IV fluid</span>
-                                    <input className="ml-2 border-b border-dotted border-black flex-1 outline-none" value={formData.innerData.ivFluidDetail} onChange={e => updateInner('ivFluidDetail', e.target.value)} disabled={!isEditable} />
+                                    <input className="ml-2 border-b border-dotted border-black flex-1 outline-none" value={formData.innerData.ivFluidDetail} onChange={e => updateInner('ivFluidDetail', e.target.value)} disabled={!isEditable || isLocked('innerData', 'ivFluidDetail')} />
                                 </div>
                             </td>
                             {renderGridCells('row10')}
@@ -723,27 +913,27 @@ export default function ViewFormPage() {
                                 <div>11. ผลตรวจห้องปฏิบัติการ</div>
                                 <div className="ml-3 mt-1 space-y-1">
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                        <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labCbc} onChange={e => updateInner('labCbc', e.target.checked)} disabled={!isEditable} /> CBC
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labCbc') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labCbc} onChange={e => updateInner('labCbc', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labCbc')} /> CBC
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labUa} onChange={e => updateInner('labUa', e.target.checked)} disabled={!isEditable} /> UA
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labUa') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labUa} onChange={e => updateInner('labUa', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labUa')} /> UA
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labElectrolyte} onChange={e => updateInner('labElectrolyte', e.target.checked)} disabled={!isEditable} /> Electrolyte
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labElectrolyte') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labElectrolyte} onChange={e => updateInner('labElectrolyte', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labElectrolyte')} /> Electrolyte
                                         </label>
-                                        <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labPtPtt} onChange={e => updateInner('labPtPtt', e.target.checked)} disabled={!isEditable} /> PT,PTT,INR
+                                        <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labPtPtt') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labPtPtt} onChange={e => updateInner('labPtPtt', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labPtPtt')} /> PT,PTT,INR
                                         </label>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <label className={`flex items-center gap-2 whitespace-nowrap ${isEditable ? 'cursor-pointer' : ''}`}>
-                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labOther} onChange={e => updateInner('labOther', e.target.checked)} disabled={!isEditable} /> อื่น ๆ
+                                        <label className={`flex items-center gap-2 whitespace-nowrap ${isEditable && !isLocked('innerData', 'labOther') ? 'cursor-pointer' : ''}`}>
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labOther} onChange={e => updateInner('labOther', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labOther')} /> อื่น ๆ
                                         </label>
-                                        <input className="border-b border-dotted border-black flex-1 outline-none ml-1" value={formData.innerData.labOtherDetail} onChange={e => updateInner('labOtherDetail', e.target.value)} disabled={!isEditable} />
+                                        <input className="border-b border-dotted border-black flex-1 outline-none ml-1" value={formData.innerData.labOtherDetail} onChange={e => updateInner('labOtherDetail', e.target.value)} disabled={!isEditable || isLocked('innerData', 'labOtherDetail')} />
                                     </div>
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable} /> Film/PACs
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('innerData', 'labFilm') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable || isLocked('innerData', 'labFilm')} /> Film/PACs
                                     </label>
                                 </div>
                             </td>
@@ -758,7 +948,7 @@ export default function ViewFormPage() {
                                     style={{ backgroundImage: 'repeating-linear-gradient(transparent, transparent 1.5rem, #ccc 1.5rem, #ccc calc(1.5rem + 1px))', backgroundAttachment: 'local', lineHeight: '1.5rem' }}
                                     value={formData.innerData.medsDetail}
                                     onChange={e => updateInner('medsDetail', e.target.value)}
-                                    disabled={!isEditable}
+                                    disabled={!isEditable || isLocked('innerData', 'medsDetail')}
                                 ></textarea>
                             </td>
                             {renderGridCells('row12')}
@@ -779,13 +969,80 @@ export default function ViewFormPage() {
                                 </div>
                                 <div className="flex items-center gap-1 mb-1">
                                     <span>ผู้ตรวจสอบ</span>
-                                    <input className="border-b border-dotted border-black flex-1 outline-none text-center" value={formData.result.checker} onChange={e => updateResult('checker', e.target.value)} disabled={!isEditable} />
+                                    <input className="border-b border-dotted border-black flex-1 outline-none text-center" value={formData.result.checker} onChange={e => updateResult('checker', e.target.value)} disabled={!isEditable || isLocked('result', 'checker')} />
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <span>เวลา</span>
-                                    <input className="border-b border-dotted border-black w-16 outline-none text-center" value={formData.result.checkTime} onChange={e => updateResult('checkTime', e.target.value)} disabled={!isEditable} />
-                                    <span>วันที่/เดือน/ปี</span>
-                                    <input className="border-b border-dotted border-black flex-1 outline-none text-center" value={formData.result.checkDate} onChange={e => updateResult('checkDate', e.target.value)} disabled={!isEditable} />
+                                    <input
+                                        type="time"
+                                        className={`border-b border-dotted border-black w-24 outline-none text-center bg-transparent ${!formData.result.checkTime ? 'text-transparent' : ''}`}
+                                        value={formData.result.checkTime}
+                                        onChange={e => updateResult('checkTime', e.target.value)}
+                                        disabled={!isEditable || isLocked('result', 'checkTime')}
+                                        style={{ appearance: 'none' }}
+                                    />
+                                    <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
+                                    <input
+                                        className="border-b border-dotted border-black flex-1 outline-none text-center"
+                                        value={formData.result.checkDate}
+                                        readOnly
+                                        placeholder="เลือกวันที่"
+                                        onClick={() => {
+                                            if (!isEditable || isLocked('result', 'checkDate')) return;
+                                            const picker = document.getElementById('checkDatePickerView');
+                                            if (picker) picker.click();
+                                        }}
+                                        style={{ cursor: isEditable && !isLocked('result', 'checkDate') ? 'pointer' : 'default' }}
+                                        disabled={!isEditable || isLocked('result', 'checkDate')}
+                                    />
+                                    {isEditable && (
+                                        <DatePicker
+                                            id="checkDatePickerView"
+                                            selected={formData.result.checkDate ? (() => {
+                                                const parts = formData.result.checkDate.split('/');
+                                                if (parts.length === 3) {
+                                                    const day = parseInt(parts[0]);
+                                                    const month = parseInt(parts[1]) - 1;
+                                                    const thaiYear = parseInt(parts[2]);
+                                                    const year = thaiYear > 2500 ? thaiYear - 543 : thaiYear;
+                                                    return new Date(year, month, day);
+                                                }
+                                                return null;
+                                            })() : null}
+                                            onChange={(date: Date | null) => {
+                                                if (date) {
+                                                    const day = date.getDate();
+                                                    const month = date.getMonth() + 1;
+                                                    const year = date.getFullYear() + 543;
+                                                    updateResult('checkDate', `${day}/${month}/${year}`);
+                                                } else {
+                                                    updateResult('checkDate', '');
+                                                }
+                                            }}
+                                            renderCustomHeader={({
+                                                date,
+                                                decreaseMonth,
+                                                increaseMonth,
+                                                prevMonthButtonDisabled,
+                                                nextMonthButtonDisabled,
+                                            }) => (
+                                                <div className="flex items-center justify-between px-2 py-2">
+                                                    <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                        &lt;
+                                                    </button>
+                                                    <span className="font-medium">
+                                                        {date.toLocaleDateString('th-TH', { month: 'long' })} {date.getFullYear() + 543}
+                                                    </span>
+                                                    <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                        &gt;
+                                                    </button>
+                                                </div>
+                                            )}
+                                            customInput={<span style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />}
+                                            portalId="root"
+                                            popperPlacement="top-start"
+                                        />
+                                    )}
                                 </div>
                             </td>
                         </tr>

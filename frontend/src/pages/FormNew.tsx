@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 
 import { toast } from 'sonner';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // ข้อมูลเริ่มต้นของฟอร์ม
 const initialFormData = {
@@ -192,9 +194,7 @@ export default function NewFormPage() {
     };
 
     // Fill time for a specific row
-    const fillRowTime = (rowKey: string) => {
-        updateRow(rowKey, 'time', getCurrentTime());
-    };
+
 
     const handleSubmit = () => {
         setShowConfirmModal(true);
@@ -361,23 +361,54 @@ export default function NewFormPage() {
                     </div>
                 </td>
                 <td
-                    className="border-r border-black p-0 text-center align-middle group cursor-text"
+                    className="border-r border-black p-0 text-center align-middle group cursor-pointer hover:bg-blue-50 relative"
                     rowSpan={rowSpan}
                     onClick={(e) => {
                         const input = e.currentTarget.querySelector('input');
-                        if (input) input.focus();
+                        if (input) {
+                            input.focus();
+                            if ('showPicker' in input) {
+                                try {
+                                    (input as any).showPicker();
+                                } catch (error) {
+                                    // Ignore
+                                }
+                            }
+                        }
                     }}
                 >
-                    <div className="flex items-center justify-center w-full h-full p-1 gap-1">
-                        <input type="text" className="flex-1 text-center outline-none bg-transparent min-w-0" value={rowData.time} onChange={e => updateRow(rowKey, 'time', e.target.value)} />
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); fillRowTime(rowKey); }}
-                            className="opacity-0 group-hover:opacity-100 text-xs px-1 py-0.5 bg-blue-100 hover:bg-blue-200 rounded transition-opacity print:hidden"
-                            title="เวลาปัจจุบัน"
-                        >
-                            🕐
-                        </button>
+
+                    <div className="w-full h-full relative min-h-[24px]">
+                        {/* 1. Display Text (Absolute Center) */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className={`${!rowData.time ? 'text-transparent' : 'text-black'}`}>
+                                {rowData.time || '--:--'}
+                            </span>
+                        </div>
+
+                        {/* 2. Invisible Input Overlay (For clicking) */}
+                        <input
+                            type="time"
+                            className="absolute inset-0 w-full h-full cursor-pointer z-10"
+                            value={rowData.time}
+                            onChange={e => updateRow(rowKey, 'time', e.target.value)}
+                            style={{ opacity: 0 }}
+                        />
+
+                        {/* 3. Clear Button (Top layer) */}
+                        {rowData.time && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateRow(rowKey, 'time', '');
+                                }}
+                                className="absolute right-0.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 z-20 p-1 rounded-full hover:bg-gray-100"
+                                title="ลบเวลา"
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        )}
                     </div>
                 </td>
                 <td
@@ -388,8 +419,8 @@ export default function NewFormPage() {
                         if (input) input.focus();
                     }}
                 >
-                    <div className="flex items-center justify-center w-full h-full p-2">
-                        <input type="text" className="w-full text-center outline-none bg-transparent" value={rowData.preparer} onChange={e => updateRow(rowKey, 'preparer', e.target.value)} />
+                    <div className="w-full h-full p-2">
+                        <input type="text" className="w-full h-full text-center outline-none bg-transparent" value={rowData.preparer} onChange={e => updateRow(rowKey, 'preparer', e.target.value)} />
                     </div>
                 </td>
             </>
@@ -399,7 +430,7 @@ export default function NewFormPage() {
     return (
         <div className="min-h-screen bg-gray-100 p-8 flex justify-center text-black font-sans leading-tight">
             {/* Paper Container - A4ish */}
-            <div className="w-[210mm] bg-white shadow-lg p-10 relative">
+            <div className="w-[240mm] bg-white shadow-lg p-10 relative">
 
                 {/* Navigation Back */}
                 <Link to="/dashboard" className="absolute left-4 top-4 text-gray-400 hover:text-gray-600 print:hidden">
@@ -455,7 +486,7 @@ export default function NewFormPage() {
                             <td className="px-2 py-2" style={{ width: '25%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">แพ้ยา:</span>
-                                    <input className="flex-1 outline-none min-w-0 text-red-600 bg-transparent border-b border-dotted border-black" value={formData.allergy} onChange={e => updateField('allergy', e.target.value)} />
+                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.allergy} onChange={e => updateField('allergy', e.target.value)} />
                                 </div>
                             </td>
                         </tr>
@@ -726,9 +757,71 @@ export default function NewFormPage() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <span>เวลา</span>
-                                    <input className="border-b border-dotted border-black w-16 outline-none text-center" value={formData.result.checkTime} onChange={e => updateResult('checkTime', e.target.value)} />
-                                    <span>วันที่/เดือน/ปี</span>
-                                    <input className="border-b border-dotted border-black flex-1 outline-none text-center" value={formData.result.checkDate} onChange={e => updateResult('checkDate', e.target.value)} />
+                                    <input
+                                        type="time"
+                                        className={`border-b border-dotted border-black w-24 outline-none text-center bg-transparent ${!formData.result.checkTime ? 'text-transparent' : ''}`}
+                                        value={formData.result.checkTime}
+                                        onChange={e => updateResult('checkTime', e.target.value)}
+                                        style={{ appearance: 'none' }}
+                                    />
+                                    <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
+                                    <input
+                                        className="border-b border-dotted border-black flex-1 outline-none text-center"
+                                        value={formData.result.checkDate}
+                                        readOnly
+                                        placeholder="เลือกวันที่"
+                                        onClick={() => {
+                                            const picker = document.getElementById('checkDatePicker');
+                                            if (picker) picker.click();
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    />
+                                    <DatePicker
+                                        id="checkDatePicker"
+                                        selected={formData.result.checkDate ? (() => {
+                                            const parts = formData.result.checkDate.split('/');
+                                            if (parts.length === 3) {
+                                                const day = parseInt(parts[0]);
+                                                const month = parseInt(parts[1]) - 1;
+                                                const thaiYear = parseInt(parts[2]);
+                                                const year = thaiYear > 2500 ? thaiYear - 543 : thaiYear;
+                                                return new Date(year, month, day);
+                                            }
+                                            return null;
+                                        })() : null}
+                                        onChange={(date: Date | null) => {
+                                            if (date) {
+                                                const day = date.getDate();
+                                                const month = date.getMonth() + 1;
+                                                const year = date.getFullYear() + 543;
+                                                updateResult('checkDate', `${day}/${month}/${year}`);
+                                            } else {
+                                                updateResult('checkDate', '');
+                                            }
+                                        }}
+                                        renderCustomHeader={({
+                                            date,
+                                            decreaseMonth,
+                                            increaseMonth,
+                                            prevMonthButtonDisabled,
+                                            nextMonthButtonDisabled,
+                                        }) => (
+                                            <div className="flex items-center justify-between px-2 py-2">
+                                                <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                    &lt;
+                                                </button>
+                                                <span className="font-medium">
+                                                    {date.toLocaleDateString('th-TH', { month: 'long' })} {date.getFullYear() + 543}
+                                                </span>
+                                                <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                    &gt;
+                                                </button>
+                                            </div>
+                                        )}
+                                        customInput={<span style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />}
+                                        portalId="root"
+                                        popperPlacement="top-start"
+                                    />
                                 </div>
                             </td>
                         </tr>

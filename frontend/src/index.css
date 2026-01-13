@@ -185,3 +185,69 @@ body {
     font-size: 1.125rem;
   }
 }
+
+/* iPad responsive - keep form fixed width, allow scroll */
+@media screen and (max-width: 1024px) {
+
+  /* Main container allows horizontal scroll */
+  .min-h-screen {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* DatePicker popup z-index fix */
+  .react-datepicker-popper {
+    z-index: 9999 !important;
+  }
+}
+
+/* iPad Portrait (768px) */
+@media screen and (max-width: 768px) {
+  .min-h-screen {
+    padding: 1rem !important;
+  }
+
+  /* Ensure form is scrollable */
+  body {
+    overflow-x: auto;
+  }
+}
+
+/* iPad Landscape - more space */
+@media screen and (min-width: 1024px) and (max-width: 1366px) {
+  .min-h-screen {
+    padding: 2rem;
+  }
+}
+
+/* Print styles - hide scrollbars, fit to page */
+@media print {
+  body {
+    overflow: visible !important;
+  }
+
+  .min-h-screen {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+}
+
+/* Hide default calendar/time picker indicators but keep click functionality */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+input[type="time"] {
+  position: relative;
+  padding-right: 0 !important;
+  /* Remove space for indicator */
+}
