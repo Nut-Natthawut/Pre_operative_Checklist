@@ -9,6 +9,8 @@ interface LogData {
     patientName: string;
     ward: string;
     createdAt: string;
+    status?: 'green' | 'yellow' | 'red';
+    statusMessage?: string;
 }
 
 export default function DashboardPage() {
@@ -170,16 +172,17 @@ export default function DashboardPage() {
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
-                                    <th className="py-3 px-4 font-medium text-gray-600">วันที่-เวลา</th>
-                                    <th className="py-3 px-4 font-medium text-gray-600">HN</th>
-                                    <th className="py-3 px-4 font-medium text-gray-600">ชื่อผู้ป่วย</th>
-                                    <th className="py-3 px-4 font-medium text-gray-600">Ward</th>
+                                    <th className="py-3 px-4 font-medium text-gray-600 w-[15%]">วันที่-เวลา</th>
+                                    <th className="py-3 px-4 font-medium text-gray-600 w-[15%]">HN</th>
+                                    <th className="py-3 px-4 font-medium text-gray-600 w-[25%]">ชื่อผู้ป่วย</th>
+                                    <th className="py-3 px-4 font-medium text-gray-600 w-[10%]">Ward</th>
+                                    <th className="py-3 px-4 font-medium text-gray-600 w-[35%]">สถานะ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {isLoadingLogs ? (
                                     <tr>
-                                        <td colSpan={4} className="py-8 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
+                                        <td colSpan={5} className="py-8 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 ) : logs.length > 0 ? (
                                     logs.reduce((acc: React.ReactNode[], log, index, array) => {
@@ -193,7 +196,7 @@ export default function DashboardPage() {
                                         if (dateStr !== prevDateStr) {
                                             acc.push(
                                                 <tr key={`header-${dateStr}`} className="bg-gray-100/50">
-                                                    <td colSpan={4} className="py-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider relative">
+                                                    <td colSpan={5} className="py-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider relative">
                                                         <div className="flex items-center gap-2">
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -213,6 +216,24 @@ export default function DashboardPage() {
                                                 <td className="py-3 px-4 text-gray-800 font-medium text-blue-600 group-hover:underline">{log.hn}</td>
                                                 <td className="py-3 px-4 text-gray-800">{log.patientName}</td>
                                                 <td className="py-3 px-4 text-gray-600 bg-gray-50/30 rounded-r-lg group-hover:bg-transparent">{log.ward || '-'}</td>
+                                                <td className="py-3 px-4">
+                                                    {log.status === 'green' ? (
+                                                        <div className="flex items-center gap-2 text-green-700 bg-green-50 px-2 py-1 rounded-full w-fit text-xs border border-green-200">
+                                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                                            <span>{log.statusMessage} (พร้อม)</span>
+                                                        </div>
+                                                    ) : log.status === 'yellow' ? (
+                                                        <div className="flex items-center gap-2 text-yellow-700 bg-yellow-50 px-2 py-1 rounded-full w-fit text-xs border border-yellow-200">
+                                                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                                            <span>{log.statusMessage}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 text-gray-400 text-xs">
+                                                            <div className="w-2 h-2 rounded-full bg-gray-200"></div>
+                                                            <span>-</span>
+                                                        </div>
+                                                    )}
+                                                </td>
                                             </tr>
                                         );
 
@@ -220,7 +241,7 @@ export default function DashboardPage() {
                                     }, [])
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="py-8 text-center text-gray-500">
+                                        <td colSpan={5} className="py-8 text-center text-gray-500">
                                             ไม่พบข้อมูลการบันทึก{searchTerm ? ` ของ HN "${searchTerm}"` : (filterDate ? ` ของวันที่ ${new Date(filterDate).toLocaleDateString('th-TH')}` : '')}
                                         </td>
                                     </tr>
