@@ -480,7 +480,7 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Age:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.age} onChange={e => updateField('age', e.target.value)} />
+                                    <input type="number" min="0" max="150" className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.age} onChange={e => updateField('age', e.target.value)} />
                                 </div>
                             </td>
                             <td className="px-2 py-2" style={{ width: '25%' }}>
@@ -500,13 +500,13 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">HN:</span>
-                                    <input className="flex-1 outline-none min-w-0 font-bold bg-transparent border-b border-dotted border-black" value={formData.hn} onChange={e => updateField('hn', e.target.value)} />
+                                    <input type="text" inputMode="numeric" pattern="[0-9]*" className="flex-1 outline-none min-w-0 font-bold bg-transparent border-b border-dotted border-black" value={formData.hn} onChange={e => updateField('hn', e.target.value)} />
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2">
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">AN:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.an} onChange={e => updateField('an', e.target.value)} />
+                                    <input type="text" inputMode="numeric" pattern="[0-9]*" className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.an} onChange={e => updateField('an', e.target.value)} />
                                 </div>
                             </td>
                             <td className="px-2 py-2">
