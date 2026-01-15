@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, like } from 'drizzle-orm';
+import { eq, like, sql } from 'drizzle-orm';
 import { preopForms } from '../db/schema';
 import { generateId } from '../lib/password';
 import { authMiddleware } from '../middleware/auth';
@@ -232,6 +232,7 @@ formRoutes.get('/', async (c) => {
         preparer: preopForms.preparer,
       })
       .from(preopForms)
+      .orderBy(sql`${preopForms.createdAt} DESC`)
       .limit(limit)
       .offset(offset)
       .all();
