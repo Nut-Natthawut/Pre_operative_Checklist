@@ -21,10 +21,33 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Middleware
 app.use('*', logger());
+
+// CORS - Restrict to allowed origins only
+const allowedOrigins = [
+  'http://localhost:5173',    // Vite dev server
+  'http://localhost:5174',    // Vite alternate port
+  'http://localhost:3000',    // Alternative dev port
+  'http://127.0.0.1:5173',    // Localhost alternative
+  'http://127.0.0.1:5174',    // Localhost alternate port
+];
+
 app.use('*', cors({
-  origin: '*',
+  origin: (origin) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return undefined;
+    
+    // Check exact matches
+    if (allowedOrigins.includes(origin)) return origin;
+    
+    // Allow all *.vercel.app subdomains
+    if (origin.endsWith('.vercel.app')) return origin;
+    
+    // Block all other origins
+    return null;
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 // Initialize DB
