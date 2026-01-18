@@ -13,11 +13,15 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return passwordHash === hash;
 }
 
+// Token expiry constants
+const ACCESS_TOKEN_EXPIRY = 2 * 60 * 60; // 2 hours in seconds
+const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
+
 // Simple JWT implementation for Cloudflare Workers
-export async function createToken(payload: object, secret: string): Promise<string> {
+export async function createToken(payload: object, secret: string, expirySeconds: number = ACCESS_TOKEN_EXPIRY): Promise<string> {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
-  const tokenPayload = { ...payload, iat: now, exp: now + 86400 }; // 24 hours
+  const tokenPayload = { ...payload, iat: now, exp: now + expirySeconds };
   
   const base64Header = btoa(JSON.stringify(header));
   const base64Payload = btoa(JSON.stringify(tokenPayload));
@@ -40,6 +44,12 @@ export async function createToken(payload: object, secret: string): Promise<stri
   const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)));
   
   return `${base64Header}.${base64Payload}.${base64Signature}`;
+}
+
+// Create refresh token (longer expiry, includes type marker)
+export async function createRefreshToken(payload: object, secret: string): Promise<string> {
+  const refreshPayload = { ...payload, type: 'refresh' };
+  return createToken(refreshPayload, secret, REFRESH_TOKEN_EXPIRY);
 }
 
 export async function verifyToken(token: string, secret: string): Promise<object | null> {

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
 import { users } from '../db/schema';
-import { hashPassword, verifyPassword, createToken, generateId } from '../lib/password';
+import { hashPassword, verifyPassword, createToken, createRefreshToken, verifyToken, generateId } from '../lib/password';
 import { authMiddleware } from '../middleware/auth';
 import type { Env, Variables } from '../index';
 
@@ -43,16 +43,19 @@ auth.post('/login', async (c) => {
     }
     
     const secret = c.env.JWT_SECRET || 'default-secret-change-in-production';
-    const token = await createToken(
-      { id: user.id, username: user.username, role: user.role },
-      secret
-    );
+    const userPayload = { id: user.id, username: user.username, role: user.role };
+    
+    // Create both access and refresh tokens
+    const token = await createToken(userPayload, secret);
+    const refreshToken = await createRefreshToken(userPayload, secret);
     
     return c.json({
       success: true,
       message: 'เข้าสู่ระบบสำเร็จ',
       data: {
         token,
+        refreshToken,
+        expiresIn: 7200, // 2 hours in seconds
         user: {
           id: user.id,
           username: user.username,
@@ -107,6 +110,67 @@ auth.get('/me', authMiddleware, async (c) => {
     });
   } catch (error) {
     console.error('Get me error:', error);
+    return c.json({ 
+      success: false, 
+      message: 'เกิดข้อผิดพลาดในระบบ',
+      error: 'Internal server error' 
+    }, 500);
+  }
+});
+
+// POST /api/auth/refresh - Get new access token using refresh token
+auth.post('/refresh', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { refreshToken } = body;
+    
+    if (!refreshToken) {
+      return c.json({ 
+        success: false, 
+        message: 'กรุณาส่ง refresh token',
+        error: 'Refresh token is required' 
+      }, 400);
+    }
+    
+    const secret = c.env.JWT_SECRET || 'default-secret-change-in-production';
+    const payload = await verifyToken(refreshToken, secret) as { id: string; username: string; role: string; type?: string } | null;
+    
+    if (!payload || payload.type !== 'refresh') {
+      return c.json({ 
+        success: false, 
+        message: 'Refresh token ไม่ถูกต้องหรือหมดอายุ',
+        error: 'Invalid or expired refresh token' 
+      }, 401);
+    }
+    
+    // Verify user still exists
+    const db = c.get('db');
+    const user = await db.select().from(users).where(eq(users.id, payload.id)).get();
+    
+    if (!user) {
+      return c.json({ 
+        success: false, 
+        message: 'ไม่พบผู้ใช้',
+        error: 'User not found' 
+      }, 404);
+    }
+    
+    // Issue new access token
+    const newToken = await createToken(
+      { id: user.id, username: user.username, role: user.role },
+      secret
+    );
+    
+    return c.json({
+      success: true,
+      message: 'ต่ออายุ token สำเร็จ',
+      data: {
+        token: newToken,
+        expiresIn: 7200
+      }
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
     return c.json({ 
       success: false, 
       message: 'เกิดข้อผิดพลาดในระบบ',
