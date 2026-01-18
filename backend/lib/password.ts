@@ -1,16 +1,93 @@
-// Simple password hashing using Web Crypto API (available in Cloudflare Workers)
+// Secure password hashing using PBKDF2 (Web Crypto API - available in Cloudflare Workers)
+// This is the recommended alternative to bcrypt for Workers environment
 
-export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+const PBKDF2_ITERATIONS = 100000; // Industry standard
+const SALT_LENGTH = 16; // 128 bits
+const HASH_LENGTH = 32; // 256 bits
+
+// Generate random salt
+function generateSalt(): string {
+  const saltArray = new Uint8Array(SALT_LENGTH);
+  crypto.getRandomValues(saltArray);
+  return Array.from(saltArray).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password);
-  return passwordHash === hash;
+// Hash password with PBKDF2-SHA256 + salt
+export async function hashPassword(password: string): Promise<string> {
+  const salt = generateSalt();
+  const encoder = new TextEncoder();
+  
+  // Import password as key material
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  
+  // Derive key using PBKDF2
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(salt),
+      iterations: PBKDF2_ITERATIONS,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    HASH_LENGTH * 8 // bits
+  );
+  
+  const hashArray = Array.from(new Uint8Array(derivedBits));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Return format: salt$hash
+  return `${salt}$${hash}`;
+}
+
+// Verify password against stored hash
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  // Check if it's new format (contains $)
+  if (!storedHash.includes('$')) {
+    // Legacy SHA-256 format - reject for security
+    // Users must reset their password
+    return false;
+  }
+  
+  const [salt, hash] = storedHash.split('$');
+  const encoder = new TextEncoder();
+  
+  // Import password as key material
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  
+  // Derive key using PBKDF2 with same salt
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(salt),
+      iterations: PBKDF2_ITERATIONS,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    HASH_LENGTH * 8
+  );
+  
+  const hashArray = Array.from(new Uint8Array(derivedBits));
+  const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Constant-time comparison to prevent timing attacks
+  if (computedHash.length !== hash.length) return false;
+  let result = 0;
+  for (let i = 0; i < computedHash.length; i++) {
+    result |= computedHash.charCodeAt(i) ^ hash.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 // Token expiry constants
