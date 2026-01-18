@@ -55,7 +55,7 @@ auth.post('/login', async (c) => {
       data: {
         token,
         refreshToken,
-        expiresIn: 7200, // 2 hours in seconds
+        expiresIn: 28800, // 8 hours in seconds
         user: {
           id: user.id,
           username: user.username,

@@ -14,7 +14,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 // Token expiry constants
-const ACCESS_TOKEN_EXPIRY = 2 * 60 * 60; // 2 hours in seconds
+const ACCESS_TOKEN_EXPIRY = 8 * 60 * 60; // 8 hours in seconds (shift-based)
 const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
 
 // Simple JWT implementation for Cloudflare Workers
