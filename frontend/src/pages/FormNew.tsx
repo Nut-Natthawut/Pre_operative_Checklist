@@ -1,110 +1,18 @@
 
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
-
 import { toast } from 'sonner';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// ข้อมูลเริ่มต้นของฟอร์ม
-const initialFormData = {
-    // Header info
-    formDate: '',
-    formMonth: '',
-    formYear: '',
+// Import shared types and components
+import type { FormData } from '../types/form';
+import { initialFormData } from '../types/form';
+// Components will be used after refactoring is complete
+// import { PatientInfo, FormHeader, ChecklistRow } from '../components/form';
 
-    // Patient info header
-    patientName: '',
-    sex: '',
-    age: '',
-    allergy: '',
-    ward: '',
-    hn: '',
-    an: '',
-    bed: '',
-    diagnosis: '',
-    operation: '',
-    physician: '',
-
-    // Checklist items - Right side grid (Yes/No/Time/Preparer)
-    // We map keys to rows
-    rows: {
-        row1: { yes: false, no: false, time: '', preparer: '' }, // 1. การเตรียมบริเวณผิวหนัง
-        row1_1: { yes: false, no: false, time: '', preparer: '' }, // 1.1 Clean & Shave
-        row1_2: { yes: false, no: false, time: '', preparer: '' }, // 1.2 ...
-        row1_3: { yes: false, no: false, time: '', preparer: '' }, // 1.3 Mark site
-
-        row2: { yes: false, no: false, time: '', preparer: '' }, // 2. การทำความสะอาดทั่วไป
-        row2_1: { yes: false, no: false, time: '', preparer: '' },
-        row2_2: { yes: false, no: false, time: '', preparer: '' },
-        row2_3: { yes: false, no: false, time: '', preparer: '' }, // เขียนว่า 2.3 ล้าง Makeup ในรูปคือข้อ 2.3
-
-        row3: { yes: false, no: false, time: '', preparer: '' }, // 3. การสวนล้าง
-        row3_1: { yes: false, no: false, time: '', preparer: '' },
-        row3_2: { yes: false, no: false, time: '', preparer: '' },
-        row3_3: { yes: false, no: false, time: '', preparer: '' },
-        row3_4: { yes: false, no: false, time: '', preparer: '' },
-
-        row4: { yes: false, no: false, time: '', preparer: '' }, // 4.
-        row5: { yes: false, no: false, time: '', preparer: '' }, // 5. ชุดชั้นในถอดแล้ว (ในรูปข้อ 5)
-        // ข้อ 6 ในรูปคือ ของมีค่า
-        row6: { yes: false, no: false, time: '', preparer: '' },
-
-        row7: { yes: false, no: false, time: '', preparer: '' }, // 7. ติดป้ายข้อมือ
-
-        row8: { yes: false, no: false, time: '', preparer: '' }, // 8. CONSENT
-        row9: { yes: false, no: false, time: '', preparer: '' }, // 9. NPO
-        row10: { yes: false, no: false, time: '', preparer: '' }, // 10. IV fluid
-        row11: { yes: false, no: false, time: '', preparer: '' }, // 11. ผลตรวจ
-        row12: { yes: false, no: false, time: '', preparer: '' }, // 12. ยา
-    },
-
-    // Specific inner data (Left column data)
-    innerData: {
-        // 6. ของมีค่า
-        valuablesRemoved: false,
-        valuablesFixed: false,
-
-        // 8. Consent
-        consentAdult: false,
-        consentMarried: false,
-        consentChild: false,
-        consentChildGuardian: '', // Name of guardians
-
-        // 9. NPO
-        npoSolid: false,
-        npoLiquid: false,
-
-        // 10. IV
-        ivFluidDetail: '',
-
-        // 11. Lab
-        labCbc: false,
-        labUa: false,
-        labElectrolyte: false,
-        labPtPtt: false,
-        labOther: false, // Checkbox for other
-        labOtherDetail: '',
-        labFilm: false,
-
-        // 12. Meds
-        medsDetail: '',
-    },
-
-    // Bottom Result
-    result: {
-        complete: false,
-        notComplete: false,
-        checker: '',
-        checkTime: '',
-        checkDate: '', // วันที่/เดือน/ปี
-    }
-};
-
-type FormData = typeof initialFormData;
 
 export default function NewFormPage() {
     const { isLoggedIn, isLoading } = useAuth();
