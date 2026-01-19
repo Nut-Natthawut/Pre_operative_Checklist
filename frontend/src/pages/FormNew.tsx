@@ -882,7 +882,10 @@ export default function NewFormPage() {
                     <button
                         onClick={handleSubmit}
                         disabled={submitting}
-                        className="bg-green-600 text-white px-8 py-2 rounded shadow hover:bg-green-700 transition disabled:opacity-50"
+                        className="text-white px-8 py-2 rounded shadow transition disabled:opacity-50"
+                        style={{ backgroundColor: '#009CA6' }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#007a82'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#009CA6'}
                     >
                         {submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                     </button>

@@ -71,9 +71,9 @@ export default function SearchPage() {
                                     </tr></thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {results.map(result => (
-                                            <tr key={result.id} className="hover:bg-blue-50 transition-colors cursor-pointer" onClick={() => navigate(`/form/${result.id}`)}>
+                                            <tr key={result.id} className="hover:bg-[#009CA6]/10 transition-colors cursor-pointer" onClick={() => navigate(`/form/${result.id}`)}>
                                                 <td className="py-3 px-4 text-gray-800">{new Date(result.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                                                <td className="py-3 px-4 text-blue-600 font-medium">{result.hn}</td>
+                                                <td className="py-3 px-4 font-medium" style={{ color: '#009CA6' }}>{result.hn}</td>
                                                 <td className="py-3 px-4 text-gray-800">{result.an || '-'}</td>
                                                 <td className="py-3 px-4 text-gray-800">{result.patientName}</td>
                                                 <td className="py-3 px-4 text-gray-600">{result.ward || '-'}</td>

@@ -35,7 +35,7 @@ body {
   height: 1.25rem;
   border-radius: 0.25rem;
   border: 2px solid #d1d5db;
-  accent-color: #2563eb;
+  accent-color: #009CA6;
 }
 
 /* Warning banner */
@@ -67,7 +67,7 @@ body {
 
 /* Button styles */
 .btn-primary {
-  background-color: #2563eb;
+  background-color: #009CA6;
   color: white;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
@@ -76,7 +76,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: #007a82;
 }
 
 .btn-primary:disabled {
@@ -134,8 +134,8 @@ body {
 }
 
 .input-field:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  border-color: #009CA6;
+  box-shadow: 0 0 0 3px rgba(0, 156, 166, 0.2);
 }
 
 /* Card styles */
@@ -266,7 +266,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]:checked {
-  border-color: #166534;
+  border-color: #009CA6;
   background: white;
 }
 
@@ -279,7 +279,7 @@ input[type="radio"]:checked::after {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: #166534;
+  background: #009CA6;
 }
 
 input[type="radio"]:disabled {
@@ -287,7 +287,7 @@ input[type="radio"]:disabled {
 }
 
 input[type="radio"]:disabled:checked::after {
-  background: #166534;
+  background: #009CA6;
 }
 
 /* Custom Checkbox - Dark green when checked */
@@ -304,8 +304,8 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  border-color: #166534;
-  background: #166534;
+  border-color: #009CA6;
+  background: #009CA6;
 }
 
 input[type="checkbox"]:checked::after {
