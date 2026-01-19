@@ -323,3 +323,15 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:disabled {
   cursor: not-allowed;
 }
+
+/* Hide select dropdown arrow */
+select.appearance-none {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
+}
+
+select.appearance-none::-ms-expand {
+  display: none !important;
+}
