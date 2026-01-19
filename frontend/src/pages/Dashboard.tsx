@@ -220,12 +220,17 @@ export default function DashboardPage() {
                                                     {log.status === 'green' ? (
                                                         <div className="flex items-center gap-2 text-green-700 bg-green-50 px-2 py-1 rounded-full w-fit text-xs border border-green-200">
                                                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                                            <span>{log.statusMessage} (พร้อม)</span>
+                                                            <span>{log.statusMessage || 'พร้อมผ่าตัด'}</span>
                                                         </div>
                                                     ) : log.status === 'yellow' ? (
                                                         <div className="flex items-center gap-2 text-yellow-700 bg-yellow-50 px-2 py-1 rounded-full w-fit text-xs border border-yellow-200">
                                                             <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                                            <span>{log.statusMessage}</span>
+                                                            <span>{log.statusMessage || 'กำลังดำเนินการ'}</span>
+                                                        </div>
+                                                    ) : log.status === 'red' ? (
+                                                        <div className="flex items-center gap-2 text-red-700 bg-red-50 px-2 py-1 rounded-full w-fit text-xs border border-red-200">
+                                                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                                            <span>{log.statusMessage || 'ยังไม่เริ่มต้น'}</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center gap-2 text-gray-400 text-xs">
