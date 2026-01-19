@@ -122,7 +122,7 @@ export default function DashboardPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-8">
-                <div className={`grid gap-6 ${menuItems.length === 1 ? 'grid-cols-1 max-w-xl mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
+                <div className={`grid gap-6 ${menuItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                     {menuItems.map((item) => (
                         <Link key={item.href} to={item.href} className="card hover:shadow-xl transition-shadow duration-300 group">
                             <div className={`w-16 h-16 ${item.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
