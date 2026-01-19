@@ -474,7 +474,17 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
                                 <div className="flex items-center h-full">
                                     <span className="mr-3 whitespace-nowrap font-medium">Sex:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.sex} onChange={e => updateField('sex', e.target.value)} />
+                                    <select
+                                        className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black cursor-pointer appearance-none"
+                                        value={formData.sex}
+                                        onChange={e => updateField('sex', e.target.value)}
+                                        style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                                    >
+                                        <option value="" disabled hidden></option>
+                                        <option value="ชาย">ชาย</option>
+                                        <option value="หญิง">หญิง</option>
+                                        <option value="อื่นๆ">อื่นๆ</option>
+                                    </select>
                                 </div>
                             </td>
                             <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
@@ -782,17 +792,22 @@ export default function NewFormPage() {
                                             const parts = formData.result.checkDate.split('/');
                                             if (parts.length === 3) {
                                                 const day = parseInt(parts[0]);
-                                                const month = parseInt(parts[1]) - 1;
+                                                const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                                                const monthIndex = monthNames.indexOf(parts[1]);
+                                                const month = monthIndex !== -1 ? monthIndex : parseInt(parts[1]) - 1;
                                                 const thaiYear = parseInt(parts[2]);
                                                 const year = thaiYear > 2500 ? thaiYear - 543 : thaiYear;
-                                                return new Date(year, month, day);
+                                                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                                                    return new Date(year, month, day);
+                                                }
                                             }
                                             return null;
                                         })() : null}
                                         onChange={(date: Date | null) => {
                                             if (date) {
                                                 const day = date.getDate();
-                                                const month = date.getMonth() + 1;
+                                                const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                                                const month = monthNames[date.getMonth()];
                                                 const year = date.getFullYear() + 543;
                                                 updateResult('checkDate', `${day}/${month}/${year}`);
                                             } else {
