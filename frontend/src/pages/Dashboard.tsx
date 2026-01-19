@@ -61,7 +61,7 @@ export default function DashboardPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#009CA6', borderTopColor: 'transparent' }}></div>
                     <p className="text-gray-600">กำลังโหลด...</p>
                 </div>
             </div>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
             ),
-            color: 'bg-green-500 hover:bg-green-600',
+            color: 'bg-[#009CA6] hover:bg-[#007a82]',
         },
     ];
 
@@ -94,7 +94,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
             ),
-            color: 'bg-purple-500 hover:bg-purple-600',
+            color: 'bg-[#0F7D4B] hover:bg-[#0a5c36]',
         });
     }
 
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                 <div className="mt-8 card">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" style={{ color: '#009CA6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
                             รายการบันทึกล่าสุด
@@ -147,9 +147,12 @@ export default function DashboardPage() {
                                 <input
                                     type="text"
                                     placeholder="ค้นหา HN..."
-                                    className="pl-8 pr-3 py-1 border border-gray-300 rounded text-sm outline-none focus:border-blue-500 w-32 focus:w-48 transition-all"
+                                    className="pl-8 pr-3 py-1 border border-gray-300 rounded text-sm outline-none w-32 transition-all"
+                                    style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    onFocus={(e) => { e.target.style.borderColor = '#009CA6'; e.target.style.width = '12rem'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = '#d1d5db'; e.target.style.width = '8rem'; }}
                                 />
                                 <svg className="w-4 h-4 text-gray-400 absolute left-2.5 top-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -159,7 +162,10 @@ export default function DashboardPage() {
                                 <span className="text-sm text-gray-600">วันที่:</span>
                                 <input
                                     type="date"
-                                    className="border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="border border-gray-300 rounded px-2 py-1 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                                    style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
+                                    onFocus={(e) => { e.target.style.borderColor = '#009CA6'; }}
+                                    onBlur={(e) => { e.target.style.borderColor = '#d1d5db'; }}
                                     value={filterDate}
                                     onChange={(e) => setFilterDate(e.target.value)}
                                     disabled={!!searchTerm}
@@ -210,10 +216,10 @@ export default function DashboardPage() {
 
                                         acc.push(
                                             <tr key={log.id} className="hover:bg-blue-50 transition-colors cursor-pointer group" onClick={() => navigate(`/form/${log.id}`)}>
-                                                <td className="py-3 px-4 text-gray-800 border-l-4 border-transparent group-hover:border-blue-500 pl-3">
+                                                <td className="py-3 px-4 text-gray-800 border-l-4 border-transparent group-hover:border-[#009CA6] pl-3">
                                                     {logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
                                                 </td>
-                                                <td className="py-3 px-4 text-gray-800 font-medium text-blue-600 group-hover:underline">{log.hn}</td>
+                                                <td className="py-3 px-4 text-gray-800 font-medium group-hover:underline" style={{ color: '#009CA6' }}>{log.hn}</td>
                                                 <td className="py-3 px-4 text-gray-800">{log.patientName}</td>
                                                 <td className="py-3 px-4 text-gray-600 bg-gray-50/30 rounded-r-lg group-hover:bg-transparent">{log.ward || '-'}</td>
                                                 <td className="py-3 px-4">
@@ -259,8 +265,8 @@ export default function DashboardPage() {
                 <div className="mt-8 card">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">ข้อมูลระบบ</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-4 bg-blue-50 rounded-lg">
-                            <p className="text-2xl font-bold text-blue-600">FORM101</p>
+                        <div className="text-center p-4 rounded-lg" style={{ backgroundColor: 'rgba(0, 156, 166, 0.1)' }}>
+                            <p className="text-2xl font-bold" style={{ color: '#009CA6' }}>FORM101</p>
                             <p className="text-sm text-gray-500">รหัสแบบฟอร์ม</p>
                         </div>
                         <div className="text-center p-4 bg-green-50 rounded-lg">

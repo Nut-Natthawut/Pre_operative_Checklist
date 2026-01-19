@@ -1151,7 +1151,8 @@ export default function ViewFormPage() {
                             <button
                                 onClick={confirmUpdate}
                                 disabled={submitting}
-                                className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 font-medium shadow-sm transition-colors flex items-center gap-2"
+                                className="px-4 py-2 text-white rounded-lg font-medium shadow-sm transition-colors flex items-center gap-2 hover:opacity-90"
+                                style={{ backgroundColor: '#009CA6' }}
                             >
                                 {submitting && (
                                     <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
