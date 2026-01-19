@@ -133,17 +133,84 @@ formRoutes.get('/search', async (c) => {
         formDate: preopForms.formDate,
         formTime: preopForms.formTime,
         createdAt: preopForms.createdAt,
+        // Fetch fields for status calculation
+        resultOr: preopForms.resultOr,
+        anesLab: preopForms.anesLab,
+        attendingPhysician: preopForms.attendingPhysician,
+        preparer: preopForms.preparer,
+        orChecklist: preopForms.orChecklist,
+        consentData: preopForms.consentData,
+        npoData: preopForms.npoData,
       })
       .from(preopForms)
       .where(like(preopForms.hn, `%${hn}%`))
       .all();
     
+    // Calculate Status for each result (Same logic as list endpoint)
+    const resultsWithStatus = results.map(form => {
+        let status: 'green' | 'yellow' | 'red' = 'red';
+        let statusMessage = '';
+        const pendingItems: string[] = [];
+
+        try {
+            const resultOr = form.resultOr ? JSON.parse(form.resultOr) : {};
+            const orChecklist = form.orChecklist ? JSON.parse(form.orChecklist) : {};
+            const anesLab = form.anesLab ? JSON.parse(form.anesLab) : {};
+            const consentData = form.consentData ? JSON.parse(form.consentData) : {};
+            const npoData = form.npoData ? JSON.parse(form.npoData) : {};
+
+            // Check if checklist has ANY activity
+            const hasChecklistActivity = Object.keys(orChecklist).some(key => {
+                const row = orChecklist[key];
+                return row && (row.yes === true || row.no === true || (row.time && row.time.length > 0));
+            });
+
+            // Check what's still pending
+            const hasConsent = orChecklist.row8?.yes === true;
+            const hasNPO = npoData.npoSolid === true || npoData.npoLiquid === true || orChecklist.row9?.yes === true;
+            const hasLab = anesLab.labCbc || anesLab.labUa || anesLab.labElectrolyte || anesLab.labPtPtt || orChecklist.row11?.yes === true;
+
+            if (!hasConsent && hasChecklistActivity) pendingItems.push('Consent');
+            if (!hasNPO && hasChecklistActivity) pendingItems.push('NPO');
+            if (!hasLab && hasChecklistActivity) pendingItems.push('Lab');
+            if (!form.attendingPhysician && hasChecklistActivity) pendingItems.push('แพทย์');
+
+            // Determine status
+            if (resultOr.complete === true) {
+                status = 'green';
+                statusMessage = `พร้อมผ่าตัด`;
+            } else if (hasChecklistActivity) {
+                status = 'yellow';
+                if (resultOr.notComplete === true) {
+                    statusMessage = 'ยังไม่พร้อม (ตรวจสอบแล้ว)';
+                } else if (pendingItems.length > 0) {
+                    statusMessage = `รอ ${pendingItems.slice(0, 3).join(', ')}`;
+                } else {
+                    statusMessage = 'กำลังดำเนินการ';
+                }
+            } else {
+                status = 'red';
+                statusMessage = 'ยังไม่เริ่มต้น';
+            }
+        } catch (e) {
+            console.error('Error parsing form data for status:', e);
+            status = 'red';
+            statusMessage = 'ข้อผิดพลาด';
+        }
+
+        return {
+            ...form,
+            status,
+            statusMessage
+        };
+    });
+
     return c.json({
       success: true,
-      message: results.length > 0 ? `พบ ${results.length} รายการ` : 'ไม่พบข้อมูล',
+      message: resultsWithStatus.length > 0 ? `พบ ${resultsWithStatus.length} รายการ` : 'ไม่พบข้อมูล',
       data: {
-        count: results.length,
-        results,
+        count: resultsWithStatus.length,
+        results: resultsWithStatus,
       }
     });
   } catch (error) {
