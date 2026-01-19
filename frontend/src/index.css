@@ -2,11 +2,43 @@
 
 :root {
   --font-sarabun: 'Sarabun', sans-serif;
+  --color-med-teal: #009CA6;
+  --color-med-green: #0F7D4B;
 }
 
 body {
   font-family: var(--font-sarabun), system-ui, sans-serif;
-  background-color: #f0f4f8;
+  background-color: #f0f8ff;
+  /* Very subtle blue tint */
+}
+
+/* Custom Utilities for MedCMU */
+.text-med-teal {
+  color: var(--color-med-teal);
+}
+
+.bg-med-teal {
+  background-color: var(--color-med-teal);
+}
+
+.border-med-teal {
+  border-color: var(--color-med-teal);
+}
+
+.ring-med-teal {
+  --tw-ring-color: var(--color-med-teal);
+}
+
+.text-med-green {
+  color: var(--color-med-green);
+}
+
+.bg-med-green {
+  background-color: var(--color-med-green);
+}
+
+.border-med-green {
+  border-color: var(--color-med-green);
 }
 
 /* Custom scrollbar */
@@ -35,7 +67,7 @@ body {
   height: 1.25rem;
   border-radius: 0.25rem;
   border: 2px solid #d1d5db;
-  accent-color: #009CA6;
+  accent-color: var(--color-med-teal);
 }
 
 /* Warning banner */
@@ -67,34 +99,44 @@ body {
 
 /* Button styles */
 .btn-primary {
-  background-color: #009CA6;
+  background-color: var(--color-med-teal);
   color: white;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-primary:hover {
   background-color: #007a82;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 156, 166, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-secondary {
-  background-color: #e5e7eb;
+  background-color: white;
   color: #1f2937;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  transition: background-color 0.2s;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  background-color: #d1d5db;
+  background-color: #f9fafb;
+  border-color: #d1d5db;
 }
 
 .btn-danger {
@@ -127,22 +169,26 @@ body {
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #d1d5db;
+  border: 2px solid #e5e7eb;
+  /* Softer border */
   border-radius: 0.5rem;
   outline: none;
   transition: all 0.2s;
 }
 
 .input-field:focus {
-  border-color: #009CA6;
-  box-shadow: 0 0 0 3px rgba(0, 156, 166, 0.2);
+  border-color: var(--color-med-teal);
+  box-shadow: 0 0 0 3px rgba(0, 156, 166, 0.1);
+  /* Softer ring */
 }
 
 /* Card styles */
 .card {
   background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+  /* More rounded */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  /* Soft shadow */
   padding: 1.5rem;
 }
 
@@ -266,7 +312,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]:checked {
-  border-color: #009CA6;
+  border-color: var(--color-med-teal);
   background: white;
 }
 
@@ -279,7 +325,7 @@ input[type="radio"]:checked::after {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: #009CA6;
+  background: var(--color-med-teal);
 }
 
 input[type="radio"]:disabled {
@@ -287,7 +333,7 @@ input[type="radio"]:disabled {
 }
 
 input[type="radio"]:disabled:checked::after {
-  background: #009CA6;
+  background: var(--color-med-teal);
 }
 
 /* Custom Checkbox - Dark green when checked */
@@ -304,8 +350,8 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  border-color: #009CA6;
-  background: #009CA6;
+  border-color: var(--color-med-teal);
+  background: var(--color-med-teal);
 }
 
 input[type="checkbox"]:checked::after {
