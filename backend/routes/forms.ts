@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, like, sql } from 'drizzle-orm';
+import { eq, like, desc } from 'drizzle-orm';
 import { preopForms } from '../db/schema';
 import { generateId } from '../lib/password';
 import { authMiddleware } from '../middleware/auth';
@@ -230,59 +230,85 @@ formRoutes.get('/', async (c) => {
         anesLab: preopForms.anesLab,
         attendingPhysician: preopForms.attendingPhysician,
         preparer: preopForms.preparer,
+        orChecklist: preopForms.orChecklist,
+        consentData: preopForms.consentData,
+        npoData: preopForms.npoData,
       })
       .from(preopForms)
-      .orderBy(sql`${preopForms.createdAt} DESC`)
+      .orderBy(desc(preopForms.createdAt))
       .limit(limit)
       .offset(offset)
       .all();
 
     // Calculate Status for each form
+    // 🔴 RED = Only header filled (Name, HN, Bed) but checklist not started
+    // 🟡 YELLOW = Checklist in progress, but not complete yet (show what's pending)
+    // 🟢 GREEN = Complete and ready for surgery
     const formsWithStatus = forms.map(form => {
         let status: 'green' | 'yellow' | 'red' = 'red';
         let statusMessage = '';
+        const pendingItems: string[] = [];
 
         try {
             const resultOr = form.resultOr ? JSON.parse(form.resultOr) : {};
+            const orChecklist = form.orChecklist ? JSON.parse(form.orChecklist) : {};
             const anesLab = form.anesLab ? JSON.parse(form.anesLab) : {};
+            const consentData = form.consentData ? JSON.parse(form.consentData) : {};
+            const npoData = form.npoData ? JSON.parse(form.npoData) : {};
 
-            if (resultOr.complete) {
+            // Check if checklist has ANY activity (Yes/No selected or Time filled)
+            const hasChecklistActivity = Object.keys(orChecklist).some(key => {
+                const row = orChecklist[key];
+                return row && (row.yes === true || row.no === true || (row.time && row.time.length > 0));
+            });
+
+            // Check what's still pending
+            const hasConsent = orChecklist.row8?.yes === true;
+            const hasNPO = npoData.npoSolid === true || npoData.npoLiquid === true || orChecklist.row9?.yes === true;
+            const hasLab = anesLab.labCbc || anesLab.labUa || anesLab.labElectrolyte || anesLab.labPtPtt || orChecklist.row11?.yes === true;
+            const hasPrep = orChecklist.row1?.yes === true || orChecklist.row2?.yes === true;
+
+            // Build pending items list
+            if (!hasConsent && hasChecklistActivity) pendingItems.push('Consent');
+            if (!hasNPO && hasChecklistActivity) pendingItems.push('NPO');
+            if (!hasLab && hasChecklistActivity) pendingItems.push('Lab');
+            if (!form.attendingPhysician && hasChecklistActivity) pendingItems.push('แพทย์');
+
+            // Determine status
+            if (resultOr.complete === true) {
+                // 🟢 GREEN: Complete
                 status = 'green';
-                statusMessage = `ผู้เตรียม: ${form.preparer || 'พยาบาล'}`;
-            } else {
-                // Logic for Yellow
-                const isLabIncomplete = (!anesLab.labCbc && !anesLab.labUa && !anesLab.labElectrolyte && !anesLab.labPtPtt && !anesLab.labOther); 
-                // Or simplified: if user hasn't checked *any* major lab? Or specific ones? 
-                // Let's assume if *all* major labs are unchecked, it might be waiting for lab?
-                // Or maybe if some are checked but not all?
-                // User said: "รอผลตรวจเลือดอยู่" implies we know they are waiting.
-                // Let's stick to simple logic: If Result is NOT complete:
-                
-                if (!form.attendingPhysician) {
-                    status = 'yellow';
-                    statusMessage = 'รอรายงานแพทย์';
-                } else if (resultOr.notComplete) {
-                   status = 'yellow';
-                   statusMessage = 'ยังไม่พร้อม (ตรวจสอบแล้ว)';
+                statusMessage = `พร้อมผ่าตัด`;
+            } else if (hasChecklistActivity) {
+                // 🟡 YELLOW: In progress
+                status = 'yellow';
+                if (resultOr.notComplete === true) {
+                    statusMessage = 'ยังไม่พร้อม (ตรวจสอบแล้ว)';
+                } else if (pendingItems.length > 0) {
+                    statusMessage = `รอ ${pendingItems.slice(0, 3).join(', ')}`;
                 } else {
-                    // Default Red (Not started / In progress but vague)
-                    status = 'red';
+                    statusMessage = 'กำลังดำเนินการ';
                 }
+            } else {
+                // 🔴 RED: Not started (only header filled)
+                status = 'red';
+                statusMessage = 'ยังไม่เริ่มต้น';
             }
         } catch (e) {
             console.error('Error parsing form data for status:', e);
             status = 'red';
+            statusMessage = 'ข้อผิดพลาด';
         }
 
         return {
             ...form,
             status,
             statusMessage,
-            // Remove raw JSON strings to save bandwidth if not needed, 
-            // but Frontend might not need them anyway. Keep them or omit?
-            // Let's keep specific fields clean.
             resultOr: undefined,
-            anesLab: undefined
+            anesLab: undefined,
+            orChecklist: undefined,
+            consentData: undefined,
+            npoData: undefined
         };
     });
     

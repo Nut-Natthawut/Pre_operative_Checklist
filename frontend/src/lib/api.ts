@@ -11,11 +11,14 @@ interface ApiResponse<T = unknown> {
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private refreshToken: string | null = null;
+  private isRefreshing = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('token');
+      this.refreshToken = localStorage.getItem('refreshToken');
     }
   }
 
@@ -30,13 +33,29 @@ class ApiClient {
     }
   }
 
+  setRefreshToken(refreshToken: string | null) {
+    this.refreshToken = refreshToken;
+    if (typeof window !== 'undefined') {
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      } else {
+        localStorage.removeItem('refreshToken');
+      }
+    }
+  }
+
   getToken() {
     return this.token;
   }
 
+  getRefreshToken() {
+    return this.refreshToken;
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retry = true
   ): Promise<ApiResponse<T>> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -54,6 +73,16 @@ class ApiClient {
       });
 
       const data = await response.json();
+      
+      // If 401 and we have refresh token, try to refresh
+      if (response.status === 401 && this.refreshToken && retry && !this.isRefreshing) {
+        const refreshed = await this.tryRefreshToken();
+        if (refreshed) {
+          // Retry the original request with new token
+          return this.request<T>(endpoint, options, false);
+        }
+      }
+      
       return data as ApiResponse<T>;
     } catch (error) {
       return {
@@ -64,18 +93,53 @@ class ApiClient {
     }
   }
 
+  private async tryRefreshToken(): Promise<boolean> {
+    if (!this.refreshToken || this.isRefreshing) return false;
+    
+    this.isRefreshing = true;
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.data?.token) {
+        this.setToken(data.data.token);
+        this.isRefreshing = false;
+        return true;
+      }
+    } catch {
+      // Refresh failed
+    }
+    
+    // Refresh failed - clear tokens and force re-login
+    this.setToken(null);
+    this.setRefreshToken(null);
+    this.isRefreshing = false;
+    return false;
+  }
+
   // Auth endpoints
   async login(username: string, password: string) {
     const response = await this.request<{
       token: string;
+      refreshToken: string;
+      expiresIn: number;
       user: { id: string; username: string; role: string; fullName: string };
     }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
-    });
+    }, false);
 
     if (response.success && response.data?.token) {
       this.setToken(response.data.token);
+      if (response.data.refreshToken) {
+        this.setRefreshToken(response.data.refreshToken);
+      }
     }
 
     return response;
@@ -83,6 +147,7 @@ class ApiClient {
 
   async logout() {
     this.setToken(null);
+    this.setRefreshToken(null);
     return { success: true, message: 'ออกจากระบบสำเร็จ' };
   }
 
