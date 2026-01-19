@@ -669,7 +669,7 @@ export default function ViewFormPage() {
             </div>
 
             {/* Paper Container - A4ish */}
-            <div className="w-[210mm] bg-white shadow-xl p-10 relative">
+            <div className="w-[240mm] bg-white shadow-lg p-10 relative">
 
                 {/* Navigation Back */}
                 <div className="absolute left-4 top-4 print:hidden">
@@ -705,83 +705,130 @@ export default function ViewFormPage() {
                     </div>
                 </div>
 
-                {/* Patient Info Table */}
-                <table className="w-full border-collapse border border-black text-sm table-fixed">
-                    <tbody>
-                        <tr className="border-b border-black">
-                            <td className="border-r border-black px-2 py-2" style={{ width: '35%' }}>
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Name:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.patientName} onChange={e => updateField('patientName', e.target.value)} disabled={!isEditable || isLocked('patientName')} />
-                                </div>
-                            </td>
-                            <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Sex:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.sex} onChange={e => updateField('sex', e.target.value)} disabled={!isEditable || isLocked('sex')} />
-                                </div>
-                            </td>
-                            <td className="border-r border-black px-2 py-2" style={{ width: '20%' }}>
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Age:</span>
-                                    <input type="number" min="0" max="150" className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.age} onChange={e => updateField('age', e.target.value)} disabled={!isEditable || isLocked('age')} />
-                                </div>
-                            </td>
-                            <td className="px-2 py-2" style={{ width: '25%' }}>
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">แพ้ยา:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.allergy} onChange={e => updateField('allergy', e.target.value)} disabled={!isEditable || isLocked('allergy')} />
-                                </div>
-                            </td>
-                        </tr>
-                        <tr className="border-b border-black">
-                            <td className="border-r border-black px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Ward:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.ward} onChange={e => updateField('ward', e.target.value)} disabled={!isEditable || isLocked('ward')} />
-                                </div>
-                            </td>
-                            <td className="border-r border-black px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">HN:</span>
-                                    <input type="text" inputMode="numeric" pattern="[0-9]*" className="flex-1 outline-none min-w-0 font-bold bg-transparent border-b border-dotted border-black" value={formData.hn} onChange={e => updateField('hn', e.target.value)} disabled={!isEditable || isLocked('hn')} />
-                                </div>
-                            </td>
-                            <td className="border-r border-black px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">AN:</span>
-                                    <input type="text" inputMode="numeric" pattern="[0-9]*" className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.an} onChange={e => updateField('an', e.target.value)} disabled={!isEditable || isLocked('an')} />
-                                </div>
-                            </td>
-                            <td className="px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Bed:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.bed} onChange={e => updateField('bed', e.target.value)} disabled={!isEditable || isLocked('bed')} />
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="border-r border-black px-2 py-2" colSpan={2}>
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Diagnosis:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.diagnosis} onChange={e => updateField('diagnosis', e.target.value)} disabled={!isEditable || isLocked('diagnosis')} />
-                                </div>
-                            </td>
-                            <td className="border-r border-black px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Operation:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.operation} onChange={e => updateField('operation', e.target.value)} disabled={!isEditable || isLocked('operation')} />
-                                </div>
-                            </td>
-                            <td className="px-2 py-2">
-                                <div className="flex items-center h-full">
-                                    <span className="mr-3 whitespace-nowrap font-medium">Physician:</span>
-                                    <input className="flex-1 outline-none min-w-0 bg-transparent border-b border-dotted border-black" value={formData.physician} onChange={e => updateField('physician', e.target.value)} disabled={!isEditable || isLocked('physician')} />
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                {/* Patient Info Form - Boxed Layout */}
+                <div className="border border-black p-4 rounded-sm text-sm mb-4">
+                    <div className="flex flex-col gap-4">
+                        {/* Row 1: Name, Sex, Age, Allergy */}
+                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                            <div className="flex items-end gap-2 flex-[2_1_300px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Name:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.patientName}
+                                    onChange={e => updateField('patientName', e.target.value)}
+                                    disabled={!isEditable || isLocked('patientName')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[1_1_120px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Sex:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.sex}
+                                    onChange={e => updateField('sex', e.target.value)}
+                                    disabled={!isEditable || isLocked('sex')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[0_1_80px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Age:</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="150"
+                                    className="w-16 bg-transparent border-b border-dotted border-black outline-none py-1 px-0 text-center"
+                                    value={formData.age}
+                                    onChange={e => updateField('age', e.target.value)}
+                                    disabled={!isEditable || isLocked('age')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[2_1_200px]">
+                                <span className="font-bold whitespace-nowrap mb-1">แพ้ยา:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.allergy}
+                                    onChange={e => updateField('allergy', e.target.value)}
+                                    disabled={!isEditable || isLocked('allergy')}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Row 2: Ward, HN, AN, Bed */}
+                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                            <div className="flex items-end gap-2 flex-[1_1_150px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Ward:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.ward}
+                                    onChange={e => updateField('ward', e.target.value)}
+                                    disabled={!isEditable || isLocked('ward')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[1_1_200px]">
+                                <span className="font-bold whitespace-nowrap mb-1">HN:</span>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="flex-1 min-w-0 font-bold bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.hn}
+                                    onChange={e => updateField('hn', e.target.value)}
+                                    disabled={!isEditable || isLocked('hn')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[1_1_150px]">
+                                <span className="font-bold whitespace-nowrap mb-1">AN:</span>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1 text-center"
+                                    value={formData.an}
+                                    onChange={e => updateField('an', e.target.value)}
+                                    disabled={!isEditable || isLocked('an')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[0_1_100px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Bed:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.bed}
+                                    onChange={e => updateField('bed', e.target.value)}
+                                    disabled={!isEditable || isLocked('bed')}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Row 3: Diagnosis, Operation, Physician */}
+                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                            <div className="flex items-end gap-2 flex-[2_1_400px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Diagnosis:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.diagnosis}
+                                    onChange={e => updateField('diagnosis', e.target.value)}
+                                    disabled={!isEditable || isLocked('diagnosis')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[2_1_300px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Operation:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.operation}
+                                    onChange={e => updateField('operation', e.target.value)}
+                                    disabled={!isEditable || isLocked('operation')}
+                                />
+                            </div>
+                            <div className="flex items-end gap-2 flex-[1_1_250px]">
+                                <span className="font-bold whitespace-nowrap mb-1">Physician:</span>
+                                <input
+                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
+                                    value={formData.physician}
+                                    onChange={e => updateField('physician', e.target.value)}
+                                    disabled={!isEditable || isLocked('physician')}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="h-6"></div>
 
