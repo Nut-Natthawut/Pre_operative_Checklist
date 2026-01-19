@@ -228,6 +228,8 @@ class ApiClient {
         formDate: string;
         formTime: string;
         createdAt: string;
+        status?: 'green' | 'yellow' | 'red';
+        statusMessage?: string;
       }>;
     }>(`/api/forms/search?hn=${encodeURIComponent(hn)}`);
   }
