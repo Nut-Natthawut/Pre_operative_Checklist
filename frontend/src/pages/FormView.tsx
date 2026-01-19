@@ -1,109 +1,15 @@
 
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
-
 import { toast } from 'sonner';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 
-// ข้อมูลเริ่มต้นของฟอร์ม
-const initialFormData = {
-    // Header info
-    formDate: '',
-    formMonth: '',
-    formYear: '',
+// Import shared types and components
+import type { FormData } from '../types/form';
+import { initialFormData, thaiMonths } from '../types/form';
+import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components/form';
 
-    // Patient info header
-    patientName: '',
-    sex: '',
-    age: '',
-    allergy: '',
-    ward: '',
-    hn: '',
-    an: '',
-    bed: '',
-    diagnosis: '',
-    operation: '',
-    physician: '',
-
-    // Checklist items
-    rows: {
-        row1: { yes: false, no: false, time: '', preparer: '' }, // 1. การเตรียมบริเวณผิวหนัง
-        row1_1: { yes: false, no: false, time: '', preparer: '' }, // 1.1 Clean & Shave
-        row1_2: { yes: false, no: false, time: '', preparer: '' }, // 1.2 ...
-        row1_3: { yes: false, no: false, time: '', preparer: '' }, // 1.3 Mark site
-
-        row2: { yes: false, no: false, time: '', preparer: '' }, // 2. การทำความสะอาดทั่วไป
-        row2_1: { yes: false, no: false, time: '', preparer: '' },
-        row2_2: { yes: false, no: false, time: '', preparer: '' },
-        row2_3: { yes: false, no: false, time: '', preparer: '' }, // 2.3 ล้าง Makeup
-
-        row3: { yes: false, no: false, time: '', preparer: '' }, // 3. การสวนล้าง
-        row3_1: { yes: false, no: false, time: '', preparer: '' },
-        row3_2: { yes: false, no: false, time: '', preparer: '' },
-        row3_3: { yes: false, no: false, time: '', preparer: '' },
-        row3_4: { yes: false, no: false, time: '', preparer: '' },
-
-        row4: { yes: false, no: false, time: '', preparer: '' }, // 4.
-        row5: { yes: false, no: false, time: '', preparer: '' }, // 5. ชุดชั้นในถอดแล้ว
-        // ข้อ 6 ในรูปคือ ของมีค่า
-        row6: { yes: false, no: false, time: '', preparer: '' },
-
-        row7: { yes: false, no: false, time: '', preparer: '' }, // 7. ติดป้ายข้อมือ
-
-        row8: { yes: false, no: false, time: '', preparer: '' }, // 8. CONSENT
-        row9: { yes: false, no: false, time: '', preparer: '' }, // 9. NPO
-        row10: { yes: false, no: false, time: '', preparer: '' }, // 10. IV fluid
-        row11: { yes: false, no: false, time: '', preparer: '' }, // 11. ผลตรวจ
-        row12: { yes: false, no: false, time: '', preparer: '' }, // 12. ยา
-    },
-
-    // Specific inner data (Left column data)
-    innerData: {
-        // 6. ของมีค่า
-        valuablesRemoved: false,
-        valuablesFixed: false,
-
-        // 8. Consent
-        consentAdult: false,
-        consentMarried: false,
-        consentChild: false,
-        consentChildGuardian: '',
-
-        // 9. NPO
-        npoSolid: false,
-        npoLiquid: false,
-
-        // 10. IV
-        ivFluidDetail: '',
-
-        // 11. Lab
-        labCbc: false,
-        labUa: false,
-        labElectrolyte: false,
-        labPtPtt: false,
-        labOther: false,
-        labOtherDetail: '',
-        labFilm: false,
-
-        // 12. Meds
-        medsDetail: '',
-    },
-
-    // Bottom Result
-    result: {
-        complete: false,
-        notComplete: false,
-        checker: '',
-        checkTime: '',
-        checkDate: '', // วันที่/เดือน/ปี
-    }
-};
-
-type FormData = typeof initialFormData;
 
 export default function ViewFormPage() {
     const { isLoggedIn, isLoading: authLoading, isAdmin } = useAuth();
@@ -129,9 +35,7 @@ export default function ViewFormPage() {
         }
     }, [authLoading, isLoggedIn, navigate]);
 
-    // Thai month names
-    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
 
     // Load Data
     useEffect(() => {
@@ -526,133 +430,15 @@ export default function ViewFormPage() {
     const renderGridCells = (rowKey: string, rowSpan?: number) => {
         const rowData = (formData.rows as any)[rowKey] || {};
 
-        const handleYesNoChange = (value: 'yes' | 'no') => {
-            if (!isEditable) return;
-            // Check Lock
-            const lockedYes = isLocked('rows', `${rowKey}.yes`);
-            const lockedNo = isLocked('rows', `${rowKey}.no`);
-            // If either is locked, preventing changing this toggle group?? 
-            // Or just specific check? If 'Yes' is locked as True, we can't uncheck it (change to No).
-            // Actually simplest is: if either Yes or No has original value, the whole choice is locked.
-            if (lockedYes || lockedNo) return;
-
-            if (value === 'yes') {
-                updateRow(rowKey, 'yes', true);
-                updateRow(rowKey, 'no', false);
-            } else {
-                updateRow(rowKey, 'yes', false);
-                updateRow(rowKey, 'no', true);
-            }
-        };
-
         return (
-            <>
-                <td
-                    className={`border-r border-black p-1 text-center ${isEditable && !isLocked('rows', `${rowKey}.yes`) && !isLocked('rows', `${rowKey}.no`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                    rowSpan={rowSpan}
-                    onClick={() => handleYesNoChange('yes')}
-                >
-                    <div className="flex items-center justify-center h-full">
-                        <input
-                            type="radio"
-                            name={`yesno_${rowKey}`}
-                            className="w-4 h-4 pointer-events-none"
-                            checked={rowData.yes === true}
-                            readOnly
-                            disabled={!isEditable || isLocked('rows', `${rowKey}.yes`) || isLocked('rows', `${rowKey}.no`)}
-                        />
-                    </div>
-                </td>
-                <td
-                    className={`border-r border-black p-1 text-center ${isEditable && !isLocked('rows', `${rowKey}.yes`) && !isLocked('rows', `${rowKey}.no`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                    rowSpan={rowSpan}
-                    onClick={() => handleYesNoChange('no')}
-                >
-                    <div className="flex items-center justify-center h-full">
-                        <input
-                            type="radio"
-                            name={`yesno_${rowKey}`}
-                            className="w-4 h-4 pointer-events-none"
-                            checked={rowData.no === true}
-                            readOnly
-                            disabled={!isEditable || isLocked('rows', `${rowKey}.yes`) || isLocked('rows', `${rowKey}.no`)}
-                        />
-                    </div>
-                </td>
-                <td
-                    className={`border-r border-black p-0 text-center align-middle group relative ${isEditable && !isLocked('rows', `${rowKey}.time`) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                    rowSpan={rowSpan}
-                    onClick={(e) => {
-                        if (!isEditable || isLocked('rows', `${rowKey}.time`)) return;
-                        const input = e.currentTarget.querySelector('input');
-                        if (input) {
-                            input.focus();
-                            if ('showPicker' in input) {
-                                try {
-                                    (input as any).showPicker();
-                                } catch (error) {
-                                    // Ignore
-                                }
-                            }
-                        }
-                    }}
-                >
-                    <div className="w-full h-full relative min-h-[24px]">
-                        {/* 1. Display Text (Absolute Center) */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className={`${!rowData.time ? 'text-transparent' : 'text-black'}`}>
-                                {rowData.time || '--:--'}
-                            </span>
-                        </div>
-
-                        {/* 2. Invisible Input Overlay (For clicking) */}
-                        <input
-                            type="time"
-                            className="absolute inset-0 w-full h-full z-10"
-                            value={rowData.time}
-                            onChange={e => updateRow(rowKey, 'time', e.target.value)}
-                            disabled={!isEditable || isLocked('rows', `${rowKey}.time`)}
-                            style={{ opacity: 0, cursor: (isEditable && !isLocked('rows', `${rowKey}.time`)) ? 'pointer' : 'default' }}
-                        />
-
-                        {/* 3. Clear Button (Top layer) */}
-                        {isEditable && !isLocked('rows', `${rowKey}.time`) && rowData.time && (
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateRow(rowKey, 'time', '');
-                                }}
-                                className="absolute right-0.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 z-20 p-1 rounded-full hover:bg-gray-100"
-                                title="ลบเวลา"
-                            >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        )}
-                    </div>
-                </td>
-
-
-                <td
-                    className={`p-0 text-center align-middle ${isEditable && !isLocked('rows', `${rowKey}.preparer`) ? 'cursor-text hover:bg-blue-50' : ''}`}
-                    rowSpan={rowSpan}
-                    onClick={(e) => {
-                        if (!isEditable || isLocked('rows', `${rowKey}.preparer`)) return;
-                        const input = e.currentTarget.querySelector('input');
-                        if (input) input.focus();
-                    }}
-                >
-                    <div className="w-full h-full p-2">
-                        <input
-                            type="text"
-                            className="w-full h-full text-center outline-none bg-transparent"
-                            value={rowData.preparer}
-                            onChange={e => updateRow(rowKey, 'preparer', e.target.value)}
-                            disabled={!isEditable || isLocked('rows', `${rowKey}.preparer`)}
-                        />
-                    </div>
-                </td>
-            </>
+            <ChecklistRow
+                rowKey={rowKey}
+                rowData={rowData}
+                updateRow={updateRow}
+                rowSpan={rowSpan}
+                disabled={!isEditable && !isAdmin}
+                isLocked={isLocked}
+            />
         );
     };
 
@@ -682,153 +468,21 @@ export default function ViewFormPage() {
                 </div>
 
                 {/* Header */}
-                <div className="text-center mb-4">
-                    <h1 className="text-base font-bold">โรงพยาบาลมหาราชนครเชียงใหม่ คณะแพทยศาสตร์ มหาวิทยาลัยเชียงใหม่</h1>
-                    <h2 className="text-base font-bold mt-2">แบบสำรวจผู้ป่วยก่อนเข้าห้องผ่าตัด</h2>
-                    <div className="flex justify-center items-end mt-4 text-sm gap-2 group">
-                        <span>วันที่</span>
-                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formDate} onChange={e => updateField('formDate', e.target.value)} disabled={!isEditable || isLocked('formDate')} />
-                        <span>เดือน</span>
-                        <input className="border-b border-dotted border-black w-32 text-center outline-none" value={formData.formMonth} onChange={e => updateField('formMonth', e.target.value)} disabled={!isEditable || isLocked('formMonth')} />
-                        <span>พ.ศ.</span>
-                        <input className="border-b border-dotted border-black w-24 text-center outline-none" value={formData.formYear} onChange={e => updateField('formYear', e.target.value)} disabled={!isEditable || isLocked('formYear')} />
-                        {isEditable && !isLocked('formDate') && (
-                            <button
-                                type="button"
-                                onClick={fillCurrentDate}
-                                className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-100 hover:bg-blue-200 text-xs rounded transition-opacity print:hidden"
-                                title="วันที่ปัจจุบัน"
-                            >
-                                📅
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <FormHeader
+                    formDate={formData.formDate}
+                    formMonth={formData.formMonth}
+                    formYear={formData.formYear}
+                    updateField={updateField}
+                    fillCurrentDate={fillCurrentDate}
+                    disabled={!isEditable && !isAdmin}
+                />
 
-                {/* Patient Info Form - Boxed Layout */}
-                <div className="border border-black p-4 rounded-sm text-sm mb-4">
-                    <div className="flex flex-col gap-4">
-                        {/* Row 1: Name, Sex, Age, Allergy */}
-                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-                            <div className="flex items-end gap-2 flex-[2_1_300px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Name:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.patientName}
-                                    onChange={e => updateField('patientName', e.target.value)}
-                                    disabled={!isEditable || isLocked('patientName')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[1_1_120px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Sex:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.sex}
-                                    onChange={e => updateField('sex', e.target.value)}
-                                    disabled={!isEditable || isLocked('sex')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[0_1_80px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Age:</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="150"
-                                    className="w-16 bg-transparent border-b border-dotted border-black outline-none py-1 px-0 text-center"
-                                    value={formData.age}
-                                    onChange={e => updateField('age', e.target.value)}
-                                    disabled={!isEditable || isLocked('age')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[2_1_200px]">
-                                <span className="font-bold whitespace-nowrap mb-1">แพ้ยา:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.allergy}
-                                    onChange={e => updateField('allergy', e.target.value)}
-                                    disabled={!isEditable || isLocked('allergy')}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Row 2: Ward, HN, AN, Bed */}
-                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-                            <div className="flex items-end gap-2 flex-[1_1_150px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Ward:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.ward}
-                                    onChange={e => updateField('ward', e.target.value)}
-                                    disabled={!isEditable || isLocked('ward')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[1_1_200px]">
-                                <span className="font-bold whitespace-nowrap mb-1">HN:</span>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="flex-1 min-w-0 font-bold bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.hn}
-                                    onChange={e => updateField('hn', e.target.value)}
-                                    disabled={!isEditable || isLocked('hn')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[1_1_150px]">
-                                <span className="font-bold whitespace-nowrap mb-1">AN:</span>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1 text-center"
-                                    value={formData.an}
-                                    onChange={e => updateField('an', e.target.value)}
-                                    disabled={!isEditable || isLocked('an')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[0_1_100px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Bed:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.bed}
-                                    onChange={e => updateField('bed', e.target.value)}
-                                    disabled={!isEditable || isLocked('bed')}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Row 3: Diagnosis, Operation, Physician */}
-                        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-                            <div className="flex items-end gap-2 flex-[2_1_400px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Diagnosis:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.diagnosis}
-                                    onChange={e => updateField('diagnosis', e.target.value)}
-                                    disabled={!isEditable || isLocked('diagnosis')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[2_1_300px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Operation:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.operation}
-                                    onChange={e => updateField('operation', e.target.value)}
-                                    disabled={!isEditable || isLocked('operation')}
-                                />
-                            </div>
-                            <div className="flex items-end gap-2 flex-[1_1_250px]">
-                                <span className="font-bold whitespace-nowrap mb-1">Physician:</span>
-                                <input
-                                    className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                                    value={formData.physician}
-                                    onChange={e => updateField('physician', e.target.value)}
-                                    disabled={!isEditable || isLocked('physician')}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <PatientInfo
+                    formData={formData}
+                    updateField={updateField}
+                    disabled={!isEditable && !isAdmin}
+                    isLocked={isLocked}
+                />
 
                 <div className="h-6"></div>
 
@@ -1005,99 +659,11 @@ export default function ViewFormPage() {
                             {renderGridCells('row12')}
                         </tr>
 
-                        <tr className="border-b-0">
-                            <td className="border-r border-black p-1"></td>
-                            <td colSpan={4} className="p-2 align-top">
-                                <div className="flex gap-4 mb-2">
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="radio" name="completion" className="w-4 h-4" checked={formData.result.complete} onChange={() => { updateResult('complete', true); updateResult('notComplete', false); }} disabled={!isEditable} />
-                                        <span>Complete</span>
-                                    </label>
-                                    <label className={`flex items-center gap-2 ${isEditable ? 'cursor-pointer' : ''}`}>
-                                        <input type="radio" name="completion" className="w-4 h-4" checked={formData.result.notComplete} onChange={() => { updateResult('complete', false); updateResult('notComplete', true); }} disabled={!isEditable} />
-                                        <span>ไม่ Complete</span>
-                                    </label>
-                                </div>
-                                <div className="flex items-center gap-1 mb-1">
-                                    <span>ผู้ตรวจสอบ</span>
-                                    <input className="border-b border-dotted border-black flex-1 outline-none text-center" value={formData.result.checker} onChange={e => updateResult('checker', e.target.value)} disabled={!isEditable || isLocked('result', 'checker')} />
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span>เวลา</span>
-                                    <input
-                                        type="time"
-                                        className={`border-b border-dotted border-black w-24 outline-none text-center bg-transparent ${!formData.result.checkTime ? 'text-transparent' : ''}`}
-                                        value={formData.result.checkTime}
-                                        onChange={e => updateResult('checkTime', e.target.value)}
-                                        disabled={!isEditable || isLocked('result', 'checkTime')}
-                                        style={{ appearance: 'none' }}
-                                    />
-                                    <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
-                                    <input
-                                        className="border-b border-dotted border-black flex-1 outline-none text-center"
-                                        value={formData.result.checkDate}
-                                        readOnly
-                                        placeholder="เลือกวันที่"
-                                        onClick={() => {
-                                            if (!isEditable || isLocked('result', 'checkDate')) return;
-                                            const picker = document.getElementById('checkDatePickerView');
-                                            if (picker) picker.click();
-                                        }}
-                                        style={{ cursor: isEditable && !isLocked('result', 'checkDate') ? 'pointer' : 'default' }}
-                                        disabled={!isEditable || isLocked('result', 'checkDate')}
-                                    />
-                                    {isEditable && (
-                                        <DatePicker
-                                            id="checkDatePickerView"
-                                            selected={formData.result.checkDate ? (() => {
-                                                const parts = formData.result.checkDate.split('/');
-                                                if (parts.length === 3) {
-                                                    const day = parseInt(parts[0]);
-                                                    const month = parseInt(parts[1]) - 1;
-                                                    const thaiYear = parseInt(parts[2]);
-                                                    const year = thaiYear > 2500 ? thaiYear - 543 : thaiYear;
-                                                    return new Date(year, month, day);
-                                                }
-                                                return null;
-                                            })() : null}
-                                            onChange={(date: Date | null) => {
-                                                if (date) {
-                                                    const day = date.getDate();
-                                                    const month = date.getMonth() + 1;
-                                                    const year = date.getFullYear() + 543;
-                                                    updateResult('checkDate', `${day}/${month}/${year}`);
-                                                } else {
-                                                    updateResult('checkDate', '');
-                                                }
-                                            }}
-                                            renderCustomHeader={({
-                                                date,
-                                                decreaseMonth,
-                                                increaseMonth,
-                                                prevMonthButtonDisabled,
-                                                nextMonthButtonDisabled,
-                                            }) => (
-                                                <div className="flex items-center justify-between px-2 py-2">
-                                                    <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
-                                                        &lt;
-                                                    </button>
-                                                    <span className="font-medium">
-                                                        {date.toLocaleDateString('th-TH', { month: 'long' })} {date.getFullYear() + 543}
-                                                    </span>
-                                                    <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
-                                                        &gt;
-                                                    </button>
-                                                </div>
-                                            )}
-                                            customInput={<span style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />}
-                                            portalId="root"
-                                            popperPlacement="top-start"
-                                        />
-                                    )}
-                                </div>
-                            </td>
-                        </tr>
-
+                        <FormFooter
+                            result={formData.result}
+                            updateResult={updateResult}
+                            disabled={!isEditable && !isAdmin}
+                        />
                     </tbody>
                 </table>
 

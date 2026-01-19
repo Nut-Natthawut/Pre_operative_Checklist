@@ -9,7 +9,7 @@ interface ChecklistRowProps {
     updateRow: (rowKey: string, field: string, value: unknown) => void;
     rowSpan?: number;
     disabled?: boolean;
-    isLocked?: boolean;
+    isLocked?: (path: string, subPath?: string) => boolean;
 }
 
 export default function ChecklistRow({
@@ -18,12 +18,33 @@ export default function ChecklistRow({
     updateRow,
     rowSpan,
     disabled = false,
-    isLocked = false
+    isLocked
 }: ChecklistRowProps) {
-    const isFieldDisabled = disabled || isLocked;
+    // Helper to check if specific field is disabled/locked
+    const checkLocked = (field: string) => {
+        if (disabled) return true;
+        if (isLocked) return isLocked('rows', `${rowKey}.${field}`);
+        return false;
+    };
+
+    const isLockedYes = checkLocked('yes');
+    const isLockedNo = checkLocked('no');
+    const isLockedTime = checkLocked('time');
+    const isLockedPreparer = checkLocked('preparer');
+
 
     const handleYesNoChange = (value: 'yes' | 'no') => {
-        if (isFieldDisabled) return;
+        if (disabled) return;
+        if (value === 'yes' && isLockedYes) return;
+        if (value === 'no' && isLockedNo) return;
+
+        // Logic for exclusive toggle:
+        // If we want to strictly follow the old logic: if any part is locked, maybe prevent toggle?
+        // But granular locking implies we might be able to change one but not the other?
+        // Actually, FormView logic was: "if lockedYes || lockedNo return".
+        // Let's stick to that for safety if isLocked function is provided.
+        if (isLockedYes || isLockedNo) return;
+
         if (value === 'yes') {
             updateRow(rowKey, 'yes', true);
             updateRow(rowKey, 'no', false);
@@ -37,7 +58,7 @@ export default function ChecklistRow({
         <>
             {/* Yes column */}
             <td
-                className={`border-r border-black p-1 ${!isFieldDisabled ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                className={`border-r border-black p-1 ${!(disabled || isLockedYes || isLockedNo) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                 rowSpan={rowSpan}
                 onClick={() => handleYesNoChange('yes')}
             >
@@ -48,14 +69,14 @@ export default function ChecklistRow({
                         className="w-4 h-4 pointer-events-none"
                         checked={rowData.yes === true}
                         readOnly
-                        disabled={isFieldDisabled}
+                        disabled={disabled || isLockedYes || isLockedNo}
                     />
                 </div>
             </td>
 
             {/* No column */}
             <td
-                className={`border-r border-black p-1 ${!isFieldDisabled ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                className={`border-r border-black p-1 ${!(disabled || isLockedYes || isLockedNo) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                 rowSpan={rowSpan}
                 onClick={() => handleYesNoChange('no')}
             >
@@ -66,17 +87,17 @@ export default function ChecklistRow({
                         className="w-4 h-4 pointer-events-none"
                         checked={rowData.no === true}
                         readOnly
-                        disabled={isFieldDisabled}
+                        disabled={disabled || isLockedYes || isLockedNo}
                     />
                 </div>
             </td>
 
             {/* Time column */}
             <td
-                className={`border-r border-black p-0 text-center align-middle group relative ${!isFieldDisabled ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                className={`border-r border-black p-0 text-center align-middle group relative ${!(disabled || isLockedTime) ? 'cursor-pointer hover:bg-blue-50' : ''}`}
                 rowSpan={rowSpan}
                 onClick={(e) => {
-                    if (isFieldDisabled) return;
+                    if (disabled || isLockedTime) return;
                     const input = e.currentTarget.querySelector('input');
                     if (input) {
                         input.focus();
@@ -105,11 +126,11 @@ export default function ChecklistRow({
                         value={rowData.time}
                         onChange={e => updateRow(rowKey, 'time', e.target.value)}
                         style={{ opacity: 0 }}
-                        disabled={isFieldDisabled}
+                        disabled={disabled || isLockedTime}
                     />
 
                     {/* Clear Button */}
-                    {rowData.time && !isFieldDisabled && (
+                    {rowData.time && !(disabled || isLockedTime) && (
                         <button
                             type="button"
                             onClick={(e) => {
@@ -129,10 +150,10 @@ export default function ChecklistRow({
 
             {/* Preparer column */}
             <td
-                className={`p-0 text-center align-middle ${!isFieldDisabled ? 'cursor-text hover:bg-blue-50' : ''}`}
+                className={`p-0 text-center align-middle ${!(disabled || isLockedPreparer) ? 'cursor-text hover:bg-blue-50' : ''}`}
                 rowSpan={rowSpan}
                 onClick={(e) => {
-                    if (isFieldDisabled) return;
+                    if (disabled || isLockedPreparer) return;
                     const input = e.currentTarget.querySelector('input');
                     if (input) input.focus();
                 }}
@@ -143,7 +164,7 @@ export default function ChecklistRow({
                         className="w-full h-full text-center outline-none bg-transparent"
                         value={rowData.preparer}
                         onChange={e => updateRow(rowKey, 'preparer', e.target.value)}
-                        disabled={isFieldDisabled}
+                        disabled={disabled || isLockedPreparer}
                     />
                 </div>
             </td>
