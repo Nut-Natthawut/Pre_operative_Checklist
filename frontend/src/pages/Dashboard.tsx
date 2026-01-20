@@ -370,7 +370,7 @@ export default function DashboardPage() {
                             <thead>
                                 <tr className="bg-gray-50/50 border-b border-gray-100">
                                     <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">เวลา</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">HN/AN</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">HN</th>
                                     <th className="py-4 px-6 font-semibold text-gray-600 w-[20%]">ผู้ป่วย</th>
                                     <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">Ward</th>
                                     <th className="py-4 px-6 font-semibold text-gray-600 w-[24%]">สถานะ</th>

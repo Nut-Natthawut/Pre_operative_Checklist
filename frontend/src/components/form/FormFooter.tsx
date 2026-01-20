@@ -90,7 +90,10 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                         type="time"
                         className={`border-b border-dotted border-black w-24 outline-none text-center bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
                         value={result.checkTime}
-                        onChange={e => updateResult('checkTime', e.target.value)}
+                        onChange={e => { //เพิ่มคำสั่งให้ ปิด Pop-up ทันที เมื่อเลือกเวลาเสร็จแล้วครับ (ใช้ blur()
+                            updateResult('checkTime', e.target.value);
+                            e.target.blur();
+                        }}
                         style={{ appearance: 'none' }}
                         disabled={disabled}
                     />

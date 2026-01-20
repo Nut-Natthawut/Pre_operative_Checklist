@@ -124,7 +124,10 @@ export default function ChecklistRow({
                         type="time"
                         className="absolute inset-0 w-full h-full cursor-pointer z-10"
                         value={rowData.time}
-                        onChange={e => updateRow(rowKey, 'time', e.target.value)}
+                        onChange={e => { //เพิ่มคำสั่งให้ ปิด Pop-up ทันที เมื่อเลือกเวลาเสร็จแล้วครับ (ใช้ blur()
+                            updateRow(rowKey, 'time', e.target.value);
+                            e.target.blur();
+                        }}
                         style={{ opacity: 0 }}
                         disabled={disabled || isLockedTime}
                     />
