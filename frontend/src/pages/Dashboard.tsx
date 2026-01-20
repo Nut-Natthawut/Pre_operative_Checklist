@@ -18,8 +18,14 @@ export default function DashboardPage() {
     const navigate = useNavigate();
     const [logs, setLogs] = useState<LogData[]>([]);
     const [isLoadingLogs, setIsLoadingLogs] = useState(true);
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState('');  // Empty = show all
+    const [endDate, setEndDate] = useState('');      // Empty = show all
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
 
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
@@ -34,7 +40,7 @@ export default function DashboardPage() {
             }, 500);
             return () => clearTimeout(timeoutId);
         }
-    }, [isLoggedIn, user, filterDate, searchTerm]);
+    }, [isLoggedIn, user, startDate, endDate, searchTerm, currentPage, limit]);
 
     const fetchLogs = async () => {
         setIsLoadingLogs(true);
@@ -43,11 +49,13 @@ export default function DashboardPage() {
                 const response = await api.searchForms(searchTerm);
                 if (response.success && response.data) {
                     setLogs(response.data.results);
+                    setTotalCount(response.data.count);
                 }
             } else {
-                const response = await api.listForms(1, 100, filterDate);
+                const response = await api.listForms(currentPage, limit, startDate || undefined, endDate || undefined);
                 if (response.success && response.data) {
                     setLogs(response.data.forms);
+                    setTotalCount(response.data.totalCount);
                 }
             }
         } catch (error) {
@@ -55,6 +63,31 @@ export default function DashboardPage() {
         } finally {
             setIsLoadingLogs(false);
         }
+    };
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / limit);
+    const startItem = totalCount > 0 ? (currentPage - 1) * limit + 1 : 0;
+    const endItem = Math.min(currentPage * limit, totalCount);
+
+    // Handle page change
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    // Handle limit change
+    const handleLimitChange = (newLimit: number) => {
+        setLimit(newLimit);
+        setCurrentPage(1); // Reset to first page when changing limit
+    };
+
+    // Clear date filter
+    const clearDateFilter = () => {
+        setStartDate('');
+        setEndDate('');
+        setCurrentPage(1);
     };
 
     if (isLoading) {
@@ -156,15 +189,15 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-64">
+                        <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                            <div className="relative flex-1 md:w-48">
                                 <input
                                     type="text"
                                     placeholder="ค้นหา HN..."
                                     className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none transition-all placeholder-gray-400"
                                     style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                     onFocus={(e) => { e.target.style.borderColor = '#009CA6'; e.target.style.backgroundColor = '#fff'; }}
                                     onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.backgroundColor = '#f9fafb'; }}
                                 />
@@ -172,16 +205,46 @@ export default function DashboardPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
-                            <input
-                                type="date"
+
+                            {/* Date Range Filter */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-500">ตั้งแต่</span>
+                                <input
+                                    type="date"
+                                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
+                                    value={startDate}
+                                    onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                                    disabled={!!searchTerm}
+                                />
+                                <span className="text-sm text-gray-500">ถึง</span>
+                                <input
+                                    type="date"
+                                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
+                                    value={endDate}
+                                    onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                                    disabled={!!searchTerm}
+                                />
+                                {(startDate || endDate) && (
+                                    <button
+                                        onClick={clearDateFilter}
+                                        className="px-2 py-1 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                        title="ล้างตัวกรองวันที่"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+
+                            <select
                                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
-                                style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#009CA6'; }}
-                                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
+                                value={limit}
+                                onChange={(e) => handleLimitChange(Number(e.target.value))}
                                 disabled={!!searchTerm}
-                            />
+                            >
+                                <option value={10}>10 รายการ</option>
+                                <option value={20}>20 รายการ</option>
+                                <option value={50}>50 รายการ</option>
+                            </select>
                         </div>
                     </div>
 
@@ -284,6 +347,58 @@ export default function DashboardPage() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {!searchTerm && totalCount > 0 && (
+                        <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="text-sm text-gray-500">
+                                แสดง {startItem}-{endItem} จาก {totalCount} รายการ
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    ก่อนหน้า
+                                </button>
+
+                                {/* Page Numbers */}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum: number;
+                                    if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => goToPage(pageNum)}
+                                            className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                                                ? 'bg-med-teal text-white'
+                                                : 'border border-gray-200 hover:bg-white'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+
+                                <button
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    ถัดไป
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* 4. Footer System Info */}

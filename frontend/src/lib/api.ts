@@ -241,14 +241,18 @@ class ApiClient {
     }>(`/api/forms/${formId}`);
   }
 
-  async listForms(page = 1, limit = 20, date?: string) {
+  async listForms(page = 1, limit = 20, startDate?: string, endDate?: string) {
     let url = `/api/forms?page=${page}&limit=${limit}`;
-    if (date) {
-      url += `&date=${date}`;
+    if (startDate) {
+      url += `&startDate=${startDate}`;
+    }
+    if (endDate) {
+      url += `&endDate=${endDate}`;
     }
     return this.request<{
       page: number;
       limit: number;
+      totalCount: number;
       count: number;
       forms: Array<{
         id: string;
@@ -259,6 +263,8 @@ class ApiClient {
         formDate: string;
         formTime: string;
         createdAt: string;
+        status?: 'green' | 'yellow' | 'red';
+        statusMessage?: string;
       }>;
     }>(url);
   }

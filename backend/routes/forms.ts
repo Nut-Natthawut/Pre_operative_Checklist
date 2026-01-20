@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, like, desc } from 'drizzle-orm';
+import { eq, like, desc, and, gte, lte, sql } from 'drizzle-orm';
 import { preopForms } from '../db/schema';
 import { generateId } from '../lib/password';
 import { authMiddleware } from '../middleware/auth';
@@ -273,15 +273,47 @@ formRoutes.get('/:id', async (c) => {
   }
 });
 
-// GET /api/forms - List all forms (with pagination)
+// GET /api/forms - List all forms (with pagination and date range filter)
 formRoutes.get('/', async (c) => {
   try {
     const page = parseInt(c.req.query('page') || '1');
     const limit = parseInt(c.req.query('limit') || '20');
+    const startDate = c.req.query('startDate'); // Format: YYYY-MM-DD
+    const endDate = c.req.query('endDate'); // Format: YYYY-MM-DD
     const offset = (page - 1) * limit;
     
     const db = c.get('db');
     
+    // Build date filter condition (optional - if no dates, show all)
+    let whereCondition = undefined;
+    if (startDate && endDate) {
+      // Filter by date range
+      const startOfDay = `${startDate}T00:00:00.000Z`;
+      const endOfDay = `${endDate}T23:59:59.999Z`;
+      whereCondition = and(
+        gte(preopForms.createdAt, startOfDay),
+        lte(preopForms.createdAt, endOfDay)
+      );
+    } else if (startDate) {
+      // Only start date provided
+      const startOfDay = `${startDate}T00:00:00.000Z`;
+      whereCondition = gte(preopForms.createdAt, startOfDay);
+    } else if (endDate) {
+      // Only end date provided
+      const endOfDay = `${endDate}T23:59:59.999Z`;
+      whereCondition = lte(preopForms.createdAt, endOfDay);
+    }
+    // If no dates provided, whereCondition stays undefined = show all
+    
+    // Get total count for pagination
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(preopForms)
+      .where(whereCondition)
+      .get();
+    const totalCount = countResult?.count || 0;
+    
+    // Get paginated forms
     const forms = await db
       .select({
         id: preopForms.id,
@@ -302,6 +334,7 @@ formRoutes.get('/', async (c) => {
         npoData: preopForms.npoData,
       })
       .from(preopForms)
+      .where(whereCondition)
       .orderBy(desc(preopForms.createdAt))
       .limit(limit)
       .offset(offset)
@@ -385,6 +418,7 @@ formRoutes.get('/', async (c) => {
       data: {
         page,
         limit,
+        totalCount,
         count: forms.length,
         forms: formsWithStatus,
       }
