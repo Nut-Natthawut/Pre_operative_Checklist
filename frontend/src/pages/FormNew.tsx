@@ -240,11 +240,14 @@ export default function NewFormPage() {
             <div className="w-[240mm] bg-white shadow-lg p-10 relative">
 
                 {/* Navigation Back */}
-                <Link to="/dashboard" className="absolute left-4 top-4 text-gray-400 hover:text-gray-600 print:hidden">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
+                <div className="absolute left-4 top-4 print:hidden">
+                    <Link to="/dashboard" className="text-gray-400 hover:text-gray-600 flex items-center gap-1">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back
+                    </Link>
+                </div>
 
                 <FormHeader
                     formDate={formData.formDate}

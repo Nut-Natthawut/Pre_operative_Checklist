@@ -35,16 +35,19 @@ export default function ChecklistRow({
 
     const handleYesNoChange = (value: 'yes' | 'no') => {
         if (disabled) return;
-        if (value === 'yes' && isLockedYes) return;
-        if (value === 'no' && isLockedNo) return;
-
-        // Logic for exclusive toggle:
-        // If we want to strictly follow the old logic: if any part is locked, maybe prevent toggle?
-        // But granular locking implies we might be able to change one but not the other?
-        // Actually, FormView logic was: "if lockedYes || lockedNo return".
-        // Let's stick to that for safety if isLocked function is provided.
         if (isLockedYes || isLockedNo) return;
 
+        // Toggle off if already selected
+        if (value === 'yes' && rowData.yes) {
+            updateRow(rowKey, 'yes', false);
+            return;
+        }
+        if (value === 'no' && rowData.no) {
+            updateRow(rowKey, 'no', false);
+            return;
+        }
+
+        // Select the clicked one
         if (value === 'yes') {
             updateRow(rowKey, 'yes', true);
             updateRow(rowKey, 'no', false);
