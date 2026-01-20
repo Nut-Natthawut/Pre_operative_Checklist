@@ -2,6 +2,65 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { th } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+
+// Register Thai locale
+registerLocale('th', th);
+
+// Helper: Format date to YYYY-MM-DD for API
+const formatDateForAPI = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// Helper: Parse YYYY-MM-DD to Date object
+const parseDateFromAPI = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+// Thai month names
+const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+// Helper: Format date in Buddhist Era (พ.ศ.) with Thai month names
+const formatDateBE = (date: Date | null): string => {
+    if (!date) return '';
+    const day = date.getDate();
+    const month = THAI_MONTHS[date.getMonth()];
+    const yearBE = date.getFullYear() + 543;
+    return `${day} ${month} ${yearBE}`;
+};
+
+// Custom input that displays Buddhist Era year (using forwardRef for react-datepicker)
+import React from 'react';
+
+interface CustomInputProps {
+    value?: string;
+    onClick?: () => void;
+    placeholder?: string;
+    disabled?: boolean;
+    displayValue?: string;
+}
+
+const CustomDateInput = React.forwardRef<HTMLButtonElement, CustomInputProps>(
+    ({ onClick, placeholder, disabled, displayValue }, ref) => (
+        <button
+            type="button"
+            ref={ref}
+            onClick={onClick}
+            disabled={disabled}
+            className={`bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors w-36 text-left ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            {displayValue && displayValue !== '' ? displayValue : <span className="text-gray-400">{placeholder}</span>}
+        </button>
+    )
+);
 
 interface LogData {
     id: string;
@@ -206,23 +265,81 @@ export default function DashboardPage() {
                                 </svg>
                             </div>
 
-                            {/* Date Range Filter */}
+                            {/* Date Range Filter - Buddhist Era (พ.ศ.) */}
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-500">ตั้งแต่</span>
-                                <input
-                                    type="date"
-                                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
-                                    value={startDate}
-                                    onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                                <DatePicker
+                                    selected={parseDateFromAPI(startDate)}
+                                    onChange={(date: Date | null) => { setStartDate(formatDateForAPI(date)); setCurrentPage(1); }}
+                                    locale="th"
+                                    placeholderText="ว/ด/ป"
                                     disabled={!!searchTerm}
+                                    showYearDropdown
+                                    scrollableYearDropdown
+                                    yearDropdownItemNumber={15}
+                                    customInput={<CustomDateInput displayValue={formatDateBE(parseDateFromAPI(startDate))} placeholder="ว/ด/ป" disabled={!!searchTerm} />}
+                                    renderCustomHeader={({
+                                        date,
+                                        decreaseMonth,
+                                        increaseMonth,
+                                        changeYear,
+                                        prevMonthButtonDisabled,
+                                        nextMonthButtonDisabled,
+                                    }) => (
+                                        <div className="flex items-center justify-between px-2 py-2 bg-white">
+                                            <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{date.toLocaleDateString('th-TH', { month: 'long' })}</span>
+                                                <select value={date.getFullYear()} onChange={({ target: { value } }) => changeYear(Number(value))} className="border rounded px-1 py-0.5 text-sm">
+                                                    {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map(year => (
+                                                        <option key={year} value={year}>พ.ศ. {year + 543}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    )}
                                 />
                                 <span className="text-sm text-gray-500">ถึง</span>
-                                <input
-                                    type="date"
-                                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
-                                    value={endDate}
-                                    onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                                <DatePicker
+                                    selected={parseDateFromAPI(endDate)}
+                                    onChange={(date: Date | null) => { setEndDate(formatDateForAPI(date)); setCurrentPage(1); }}
+                                    locale="th"
+                                    placeholderText="ว/ด/ป"
                                     disabled={!!searchTerm}
+                                    showYearDropdown
+                                    scrollableYearDropdown
+                                    yearDropdownItemNumber={15}
+                                    customInput={<CustomDateInput displayValue={formatDateBE(parseDateFromAPI(endDate))} placeholder="ว/ด/ป" disabled={!!searchTerm} />}
+                                    renderCustomHeader={({
+                                        date,
+                                        decreaseMonth,
+                                        increaseMonth,
+                                        changeYear,
+                                        prevMonthButtonDisabled,
+                                        nextMonthButtonDisabled,
+                                    }) => (
+                                        <div className="flex items-center justify-between px-2 py-2 bg-white">
+                                            <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{date.toLocaleDateString('th-TH', { month: 'long' })}</span>
+                                                <select value={date.getFullYear()} onChange={({ target: { value } }) => changeYear(Number(value))} className="border rounded px-1 py-0.5 text-sm">
+                                                    {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map(year => (
+                                                        <option key={year} value={year}>พ.ศ. {year + 543}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    )}
                                 />
                                 {(startDate || endDate) && (
                                     <button
@@ -334,7 +451,7 @@ export default function DashboardPage() {
                                                 <td className="py-4 px-6 text-center">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); navigate(`/form/${log.id}`); }}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-med-teal text-white text-xs font-medium rounded-lg hover:bg-[#007a82] transition-colors"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-med-teal bg-teal-50 hover:bg-med-teal hover:text-white border border-med-teal/30 hover:border-transparent text-xs font-medium rounded-md transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
