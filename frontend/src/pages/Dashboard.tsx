@@ -398,11 +398,15 @@ export default function DashboardPage() {
                                         // Date Header
                                         if (dateStr !== prevDateStr) {
                                             acc.push(
-                                                <tr key={`header-${dateStr}`} className="bg-gray-50/80">
-                                                    <td colSpan={5} className="py-2 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2 h-2 rounded-full bg-med-teal"></div>
-                                                            {dateStr}
+                                                <tr key={`header-${dateStr}`} className="bg-gradient-to-r from-teal-50 to-transparent">
+                                                    <td colSpan={6} className="py-3 px-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-med-teal/10 flex items-center justify-center">
+                                                                <svg className="w-4 h-4 text-med-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-med-teal">{dateStr}</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -413,8 +417,15 @@ export default function DashboardPage() {
                                             <tr key={log.id}
                                                 className="hover:bg-teal-50/30 transition-colors cursor-pointer group border-l-2 border-transparent hover:border-med-teal"
                                                 onClick={() => navigate(`/form/${log.id}`)}>
-                                                <td className="py-4 px-6 text-gray-600 font-mono text-xs">
-                                                    {logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                                                <td className="py-4 px-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </div>
+                                                        <span className="font-medium text-gray-700">{logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     <span className="font-bold text-gray-700 group-hover:text-med-teal transition-colors">{log.hn}</span>
