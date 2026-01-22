@@ -2,6 +2,65 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { th } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+
+// Register Thai locale
+registerLocale('th', th);
+
+// Helper: Format date to YYYY-MM-DD for API
+const formatDateForAPI = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// Helper: Parse YYYY-MM-DD to Date object
+const parseDateFromAPI = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+// Thai month names
+const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+// Helper: Format date in Buddhist Era (พ.ศ.) with Thai month names
+const formatDateBE = (date: Date | null): string => {
+    if (!date) return '';
+    const day = date.getDate();
+    const month = THAI_MONTHS[date.getMonth()];
+    const yearBE = date.getFullYear() + 543;
+    return `${day} ${month} ${yearBE}`;
+};
+
+// Custom input that displays Buddhist Era year (using forwardRef for react-datepicker)
+import React from 'react';
+
+interface CustomInputProps {
+    value?: string;
+    onClick?: () => void;
+    placeholder?: string;
+    disabled?: boolean;
+    displayValue?: string;
+}
+
+const CustomDateInput = React.forwardRef<HTMLButtonElement, CustomInputProps>(
+    ({ onClick, placeholder, disabled, displayValue }, ref) => (
+        <button
+            type="button"
+            ref={ref}
+            onClick={onClick}
+            disabled={disabled}
+            className={`bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors w-36 text-left ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            {displayValue && displayValue !== '' ? displayValue : <span className="text-gray-400">{placeholder}</span>}
+        </button>
+    )
+);
 
 interface LogData {
     id: string;
@@ -18,8 +77,14 @@ export default function DashboardPage() {
     const navigate = useNavigate();
     const [logs, setLogs] = useState<LogData[]>([]);
     const [isLoadingLogs, setIsLoadingLogs] = useState(true);
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState('');  // Empty = show all
+    const [endDate, setEndDate] = useState('');      // Empty = show all
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
 
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
@@ -34,7 +99,7 @@ export default function DashboardPage() {
             }, 500);
             return () => clearTimeout(timeoutId);
         }
-    }, [isLoggedIn, user, filterDate, searchTerm]);
+    }, [isLoggedIn, user, startDate, endDate, searchTerm, currentPage, limit]);
 
     const fetchLogs = async () => {
         setIsLoadingLogs(true);
@@ -43,11 +108,13 @@ export default function DashboardPage() {
                 const response = await api.searchForms(searchTerm);
                 if (response.success && response.data) {
                     setLogs(response.data.results);
+                    setTotalCount(response.data.count);
                 }
             } else {
-                const response = await api.listForms(1, 100, filterDate);
+                const response = await api.listForms(currentPage, limit, startDate || undefined, endDate || undefined);
                 if (response.success && response.data) {
                     setLogs(response.data.forms);
+                    setTotalCount(response.data.totalCount);
                 }
             }
         } catch (error) {
@@ -55,6 +122,31 @@ export default function DashboardPage() {
         } finally {
             setIsLoadingLogs(false);
         }
+    };
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / limit);
+    const startItem = totalCount > 0 ? (currentPage - 1) * limit + 1 : 0;
+    const endItem = Math.min(currentPage * limit, totalCount);
+
+    // Handle page change
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    // Handle limit change
+    const handleLimitChange = (newLimit: number) => {
+        setLimit(newLimit);
+        setCurrentPage(1); // Reset to first page when changing limit
+    };
+
+    // Clear date filter
+    const clearDateFilter = () => {
+        setStartDate('');
+        setEndDate('');
+        setCurrentPage(1);
     };
 
     if (isLoading) {
@@ -156,15 +248,15 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-64">
+                        <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                            <div className="relative flex-1 md:w-48">
                                 <input
                                     type="text"
                                     placeholder="ค้นหา HN..."
                                     className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none transition-all placeholder-gray-400"
                                     style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                     onFocus={(e) => { e.target.style.borderColor = '#009CA6'; e.target.style.backgroundColor = '#fff'; }}
                                     onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.backgroundColor = '#f9fafb'; }}
                                 />
@@ -172,16 +264,104 @@ export default function DashboardPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
-                            <input
-                                type="date"
+
+                            {/* Date Range Filter - Buddhist Era (พ.ศ.) */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-500">ตั้งแต่</span>
+                                <DatePicker
+                                    selected={parseDateFromAPI(startDate)}
+                                    onChange={(date: Date | null) => { setStartDate(formatDateForAPI(date)); setCurrentPage(1); }}
+                                    locale="th"
+                                    placeholderText="ว/ด/ป"
+                                    disabled={!!searchTerm}
+                                    showYearDropdown
+                                    scrollableYearDropdown
+                                    yearDropdownItemNumber={15}
+                                    customInput={<CustomDateInput displayValue={formatDateBE(parseDateFromAPI(startDate))} placeholder="ว/ด/ป" disabled={!!searchTerm} />}
+                                    renderCustomHeader={({
+                                        date,
+                                        decreaseMonth,
+                                        increaseMonth,
+                                        changeYear,
+                                        prevMonthButtonDisabled,
+                                        nextMonthButtonDisabled,
+                                    }) => (
+                                        <div className="flex items-center justify-between px-2 py-2 bg-white">
+                                            <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{date.toLocaleDateString('th-TH', { month: 'long' })}</span>
+                                                <select value={date.getFullYear()} onChange={({ target: { value } }) => changeYear(Number(value))} className="border rounded px-1 py-0.5 text-sm">
+                                                    {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map(year => (
+                                                        <option key={year} value={year}>พ.ศ. {year + 543}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                />
+                                <span className="text-sm text-gray-500">ถึง</span>
+                                <DatePicker
+                                    selected={parseDateFromAPI(endDate)}
+                                    onChange={(date: Date | null) => { setEndDate(formatDateForAPI(date)); setCurrentPage(1); }}
+                                    locale="th"
+                                    placeholderText="ว/ด/ป"
+                                    disabled={!!searchTerm}
+                                    showYearDropdown
+                                    scrollableYearDropdown
+                                    yearDropdownItemNumber={15}
+                                    customInput={<CustomDateInput displayValue={formatDateBE(parseDateFromAPI(endDate))} placeholder="ว/ด/ป" disabled={!!searchTerm} />}
+                                    renderCustomHeader={({
+                                        date,
+                                        decreaseMonth,
+                                        increaseMonth,
+                                        changeYear,
+                                        prevMonthButtonDisabled,
+                                        nextMonthButtonDisabled,
+                                    }) => (
+                                        <div className="flex items-center justify-between px-2 py-2 bg-white">
+                                            <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{date.toLocaleDateString('th-TH', { month: 'long' })}</span>
+                                                <select value={date.getFullYear()} onChange={({ target: { value } }) => changeYear(Number(value))} className="border rounded px-1 py-0.5 text-sm">
+                                                    {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 10 + i).map(year => (
+                                                        <option key={year} value={year}>พ.ศ. {year + 543}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="p-1 hover:bg-gray-100 rounded">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                />
+                                {(startDate || endDate) && (
+                                    <button
+                                        onClick={clearDateFilter}
+                                        className="px-2 py-1 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                        title="ล้างตัวกรองวันที่"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+
+                            <select
                                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
-                                style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#009CA6'; }}
-                                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
+                                value={limit}
+                                onChange={(e) => handleLimitChange(Number(e.target.value))}
                                 disabled={!!searchTerm}
-                            />
+                            >
+                                <option value={10}>10 รายการ</option>
+                                <option value={20}>20 รายการ</option>
+                                <option value={50}>50 รายการ</option>
+                            </select>
                         </div>
                     </div>
 
@@ -189,17 +369,18 @@ export default function DashboardPage() {
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[15%]">เวลา</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[15%]">HN/AN</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[25%]">ผู้ป่วย</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[15%]">Ward</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[30%]">สถานะ</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">เวลา</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">HN</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[20%]">ผู้ป่วย</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">Ward</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[24%]">สถานะ</th>
+                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[20%] text-center">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {isLoadingLogs ? (
                                     <tr>
-                                        <td colSpan={5} className="py-12 text-center text-gray-500">
+                                        <td colSpan={6} className="py-12 text-center text-gray-500">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="w-8 h-8 border-4 border-med-teal border-t-transparent rounded-full animate-spin mb-2"></div>
                                                 <p>กำลังโหลดข้อมูล...</p>
@@ -217,11 +398,15 @@ export default function DashboardPage() {
                                         // Date Header
                                         if (dateStr !== prevDateStr) {
                                             acc.push(
-                                                <tr key={`header-${dateStr}`} className="bg-gray-50/80">
-                                                    <td colSpan={5} className="py-2 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2 h-2 rounded-full bg-med-teal"></div>
-                                                            {dateStr}
+                                                <tr key={`header-${dateStr}`} className="bg-gradient-to-r from-teal-50 to-transparent">
+                                                    <td colSpan={6} className="py-3 px-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-med-teal/10 flex items-center justify-center">
+                                                                <svg className="w-4 h-4 text-med-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-med-teal">{dateStr}</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -232,8 +417,15 @@ export default function DashboardPage() {
                                             <tr key={log.id}
                                                 className="hover:bg-teal-50/30 transition-colors cursor-pointer group border-l-2 border-transparent hover:border-med-teal"
                                                 onClick={() => navigate(`/form/${log.id}`)}>
-                                                <td className="py-4 px-6 text-gray-600 font-mono text-xs">
-                                                    {logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                                                <td className="py-4 px-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </div>
+                                                        <span className="font-medium text-gray-700">{logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     <span className="font-bold text-gray-700 group-hover:text-med-teal transition-colors">{log.hn}</span>
@@ -267,13 +459,25 @@ export default function DashboardPage() {
                                                         <span className="text-gray-400">-</span>
                                                     )}
                                                 </td>
+                                                <td className="py-4 px-6 text-center">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); navigate(`/form/${log.id}`); }}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-med-teal bg-teal-50 hover:bg-med-teal hover:text-white border border-med-teal/30 hover:border-transparent text-xs font-medium rounded-md transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        ดูฟอร์ม
+                                                    </button>
+                                                </td>
                                             </tr>
                                         );
                                         return acc;
                                     }, [])
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="py-16 text-center text-gray-400">
+                                        <td colSpan={6} className="py-16 text-center text-gray-400">
                                             <div className="flex flex-col items-center gap-3">
                                                 <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                                 <span>ไม่พบข้อมูลการบันทึก</span>
@@ -284,6 +488,58 @@ export default function DashboardPage() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {!searchTerm && totalCount > 0 && (
+                        <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="text-sm text-gray-500">
+                                แสดง {startItem}-{endItem} จาก {totalCount} รายการ
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    ก่อนหน้า
+                                </button>
+
+                                {/* Page Numbers */}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum: number;
+                                    if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => goToPage(pageNum)}
+                                            className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                                                ? 'bg-med-teal text-white'
+                                                : 'border border-gray-200 hover:bg-white'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+
+                                <button
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    ถัดไป
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* 4. Footer System Info */}

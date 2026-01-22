@@ -87,9 +87,13 @@ export default function PatientInfo({ formData, updateField, disabled = false, i
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
+                            maxLength={7}
                             className="flex-1 min-w-0 font-bold bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
                             value={formData.hn}
-                            onChange={e => updateField('hn', e.target.value)}
+                            onChange={e => {
+                                const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 7);
+                                updateField('hn', val);
+                            }}
                             disabled={isFieldDisabled('hn')}
                         />
                     </div>
