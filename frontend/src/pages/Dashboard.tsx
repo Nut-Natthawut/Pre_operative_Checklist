@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { DashboardSkeleton, SkeletonTableRow } from '../components/ui/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { th } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import React from 'react';
 
 // Register Thai locale
 registerLocale('th', th);
@@ -37,9 +38,6 @@ const formatDateBE = (date: Date | null): string => {
     const yearBE = date.getFullYear() + 543;
     return `${day} ${month} ${yearBE}`;
 };
-
-// Custom input that displays Buddhist Era year (using forwardRef for react-datepicker)
-import React from 'react';
 
 interface CustomInputProps {
     value?: string;
@@ -150,7 +148,7 @@ export default function DashboardPage() {
         setCurrentPage(1);
     };
 
-    if (isLoading || isLoadingLogs) {
+    if (isLoading) {
         return <DashboardSkeleton />;
     }
 
@@ -373,16 +371,15 @@ export default function DashboardPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {isLoadingLogs ? (
-                                    <tr>
-                                        <td colSpan={6} className="py-12 text-center text-gray-500">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="w-8 h-8 border-4 border-med-teal border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                <p>กำลังโหลดข้อมูล...</p>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <>
+                                        <SkeletonTableRow />
+                                        <SkeletonTableRow />
+                                        <SkeletonTableRow />
+                                        <SkeletonTableRow />
+                                        <SkeletonTableRow />
+                                    </>
                                 ) : logs.length > 0 ? (
-                                    logs.reduce((acc: React.ReactNode[], log, index, array) => {
+                                    logs.reduce((acc: JSX.Element[], log, index, array) => {
                                         const logDate = new Date(log.createdAt);
                                         const dateStr = logDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -516,7 +513,7 @@ export default function DashboardPage() {
                                             onClick={() => goToPage(pageNum)}
                                             className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === pageNum
                                                 ? 'bg-med-teal text-white'
-                                                : 'border border-gray-200 hover:bg-white'
+                                                : 'text-gray-600 hover:bg-gray-100'
                                                 }`}
                                         >
                                             {pageNum}
@@ -536,24 +533,22 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                {/* 4. Footer System Info */}
-                <div className="pt-8 border-t border-gray-200">
-                    <div className="flex flex-wrap justify-between items-center gap-4 text-xs text-gray-400">
-                        <div className="flex items-center gap-6">
-                            <div>
-                                <span className="font-semibold text-gray-500 block mb-0.5">FORM ID</span>
-                                <span className="font-mono text-med-teal">FORM101</span>
-                            </div>
-                            <div>
-                                <span className="font-semibold text-gray-500 block mb-0.5">VERSION</span>
-                                <span>v2.0.0 (Beta)</span>
-                            </div>
-                        </div>
+                <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
+                    <p>© 2026 CMU Hospital. All rights reserved.</p>
+                    <div className="flex items-center justify-center gap-4 mt-2">
                         <div className="flex items-center gap-2">
-                            <span>Supported Devices:</span>
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">iPad</span>
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">Desktop</span>
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span>System Normal</span>
                         </div>
+                        <div className="flex items-center gap-1">
+                            <span className="font-semibold text-gray-500 block mb-0.5">VERSION</span>
+                            <span>v2.0.0 (Beta)</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 justify-center">
+                        <span>Supported Devices:</span>
+                        <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">iPad</span>
+                        <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">Desktop</span>
                     </div>
                 </div>
             </main>
