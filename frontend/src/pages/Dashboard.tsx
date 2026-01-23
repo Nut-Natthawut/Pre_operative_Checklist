@@ -379,7 +379,7 @@ export default function DashboardPage() {
                                         <SkeletonTableRow />
                                     </>
                                 ) : logs.length > 0 ? (
-                                    logs.reduce((acc: JSX.Element[], log, index, array) => {
+                                    logs.reduce((acc: React.ReactNode[], log, index, array) => {
                                         const logDate = new Date(log.createdAt);
                                         const dateStr = logDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
