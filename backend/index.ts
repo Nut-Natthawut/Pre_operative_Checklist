@@ -42,6 +42,9 @@ app.use('*', cors({
     // Allow all *.vercel.app subdomains
     if (origin.endsWith('.vercel.app')) return origin;
     
+    // Allow all *.pages.dev subdomains (Cloudflare Pages)
+    if (origin.endsWith('.pages.dev')) return origin;
+    
     // Block all other origins
     return null;
   },
