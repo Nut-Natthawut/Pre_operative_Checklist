@@ -86,17 +86,24 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                 </div>
                 <div className="flex items-center gap-1">
                     <span>เวลา</span>
-                    <input
-                        type="time"
-                        className={`border-b border-dotted border-black w-24 outline-none text-center bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
-                        value={result.checkTime}
-                        onChange={e => { //เพิ่มคำสั่งให้ ปิด Pop-up ทันที เมื่อเลือกเวลาเสร็จแล้วครับ (ใช้ blur()
-                            updateResult('checkTime', e.target.value);
-                            e.target.blur();
-                        }}
-                        style={{ appearance: 'none' }}
-                        disabled={disabled}
-                    />
+                    <div className="border-b border-dotted border-black w-24 flex justify-center items-center">
+                        <input
+                            type="time"
+                            className={`outline-none text-center p-0 bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
+                            value={result.checkTime}
+                            onChange={e => {
+                                updateResult('checkTime', e.target.value);
+                                // Blur only on non-touch devices (PC) to close popup
+                                // Keep open on touch devices (iPad) for scrolling
+                                if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+                                    e.target.blur();
+                                }
+                            }}
+                            style={{ appearance: 'none', textAlign: 'center' }}
+                            disabled={disabled}
+                        />
+                    </div>
+                    <span>น.</span>
                     <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
                     <input
                         className="border-b border-dotted border-black flex-1 outline-none text-center"
