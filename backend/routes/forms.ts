@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, like, desc, and, gte, lte, sql } from 'drizzle-orm';
+import { eq, like, desc, and, or, gte, lte, sql } from 'drizzle-orm';
 import { preopForms } from '../db/schema';
 import { generateId } from '../lib/password';
 import { authMiddleware } from '../middleware/auth';
@@ -143,7 +143,12 @@ formRoutes.get('/search', async (c) => {
         npoData: preopForms.npoData,
       })
       .from(preopForms)
-      .where(like(preopForms.hn, `%${hn}%`))
+      .where(
+        or(
+          like(preopForms.hn, `%${hn}%`),
+          like(preopForms.patientName, `%${hn}%`)
+        )
+      )
       .all();
     
     // Calculate Status for each result (Same logic as list endpoint)
