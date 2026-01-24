@@ -1,5 +1,6 @@
 // FormHeader Component - Extracted from FormNew.tsx
 // Displays hospital name, form title, and date fields
+import { Calendar } from 'lucide-react';
 
 interface FormHeaderProps {
     formDate: string;
@@ -47,15 +48,17 @@ export default function FormHeader({
                     onChange={e => updateField('formYear', e.target.value)}
                     disabled={disabled}
                 />
-                <button
-                    type="button"
-                    onClick={fillCurrentDate}
-                    className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-100 hover:bg-blue-200 text-xs rounded transition-opacity print:hidden"
-                    title="วันที่ปัจจุบัน"
-                    disabled={disabled}
-                >
-                    📅
-                </button>
+                {!formDate && (
+                    <button
+                        type="button"
+                        onClick={fillCurrentDate}
+                        className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-xs rounded transition-colors"
+                        title="วันที่ปัจจุบัน"
+                        disabled={disabled}
+                    >
+                        <Calendar className="w-4 h-4" />
+                    </button>
+                )}
             </div>
         </div>
     );
