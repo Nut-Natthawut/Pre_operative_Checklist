@@ -77,7 +77,9 @@ export default function ViewFormPage() {
                         patientName: backendData.patientName || '',
                         sex: backendData.sex || '',
                         age: backendData.age || '',
-                        allergy: backendData.allergy || '',
+                        // Detect allergyStatus from allergy value: 'NKDA' = ปฏิเสธ, has value = แพ้, empty = unknown
+                        allergyStatus: backendData.allergy === 'NKDA' ? 'no' : (backendData.allergy ? 'yes' : 'unknown'),
+                        allergy: backendData.allergy === 'NKDA' ? '' : (backendData.allergy || ''),
                         ward: backendData.ward || '',
                         hn: backendData.hn || '',
                         an: backendData.an || '',
@@ -169,7 +171,9 @@ export default function ViewFormPage() {
                         patientName: backendData.patientName || '',
                         sex: backendData.sex || '',
                         age: backendData.age || '',
-                        allergy: backendData.allergy || '',
+                        // Detect allergyStatus from allergy value: 'NKDA' = ปฏิเสธ, has value = แพ้, empty = unknown
+                        allergyStatus: backendData.allergy === 'NKDA' ? 'no' : (backendData.allergy ? 'yes' : 'unknown'),
+                        allergy: backendData.allergy === 'NKDA' ? '' : (backendData.allergy || ''),
                         ward: backendData.ward || '',
                         hn: backendData.hn || '',
                         an: backendData.an || '',

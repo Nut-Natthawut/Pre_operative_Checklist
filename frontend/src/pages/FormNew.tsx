@@ -139,7 +139,8 @@ export default function NewFormPage() {
                 patientName: formData.patientName,
                 sex: formData.sex,
                 age: formData.age,
-                allergy: formData.allergy,
+                // allergyStatus: 'no' -> 'NKDA', 'yes' -> allergy value, 'unknown' -> empty
+                allergy: formData.allergyStatus === 'no' ? 'NKDA' : (formData.allergyStatus === 'yes' ? formData.allergy : ''),
                 bed: formData.bed,
                 department: '', // Not in form
                 weight: '', // Not in form

@@ -85,6 +85,7 @@ export interface FormData {
     patientName: string;
     sex: string;
     age: string;
+    allergyStatus: 'unknown' | 'yes' | 'no';  // unknown=not answered, yes=has allergy, no=denies allergy
     allergy: string;
     ward: string;
     hn: string;
@@ -110,6 +111,7 @@ export const initialFormData: FormData = {
     patientName: '',
     sex: '',
     age: '',
+    allergyStatus: 'unknown',
     allergy: '',
     ward: '',
     hn: '',
