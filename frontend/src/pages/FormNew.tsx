@@ -272,8 +272,8 @@ export default function NewFormPage() {
                             <th className="border-r border-black py-2 px-2 font-medium w-[50%] text-center">รายการ</th>
                             <th className="border-r border-black py-2 px-1 font-medium w-[7%] text-center">Yes</th>
                             <th className="border-r border-black py-2 px-1 font-medium w-[7%] text-center">No</th>
-                            <th className="border-r border-black py-2 px-1 font-medium w-[10%] text-center">เวลา</th>
-                            <th className="py-2 px-1 font-medium w-[26%] text-center">ผู้เตรียม</th>
+                            <th className="border-r border-black py-2 px-1 font-medium w-[18%] text-center">เวลา/วันที่</th>
+                            <th className="py-2 px-1 font-medium w-[18%] text-center">ผู้เตรียม</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -387,7 +387,7 @@ export default function NewFormPage() {
                                 <div className="ml-3 mt-1 flex flex-col gap-1">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoSolid} onChange={e => updateInner('npoSolid', e.target.checked)} />
-                                        <span>อาหาร/นม/ครีมเหลว &gt; 6 ชม.</span>
+                                        <span>อาหาร/นม/ครีมเทียม &gt; 6 ชม.</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoLiquid} onChange={e => updateInner('npoLiquid', e.target.checked)} />

@@ -1,11 +1,12 @@
 // Shared types for Form components
 // Extracted from FormNew.tsx and FormView.tsx
 
-// Row data for checklist items (Yes/No/Time/Preparer)
+// Row data for checklist items (Yes/No/Time/Date/Preparer)
 export interface RowData {
     yes: boolean;
     no: boolean;
     time: string;
+    date: string; // Format: "DD/MM/YYYY" in Thai Buddhist Era
     preparer: string;
 }
 
@@ -119,28 +120,28 @@ export const initialFormData: FormData = {
     physician: '',
     // Checklist rows
     rows: {
-        row1: { yes: false, no: false, time: '', preparer: '' },
-        row1_1: { yes: false, no: false, time: '', preparer: '' },
-        row1_2: { yes: false, no: false, time: '', preparer: '' },
-        row1_3: { yes: false, no: false, time: '', preparer: '' },
-        row2: { yes: false, no: false, time: '', preparer: '' },
-        row2_1: { yes: false, no: false, time: '', preparer: '' },
-        row2_2: { yes: false, no: false, time: '', preparer: '' },
-        row2_3: { yes: false, no: false, time: '', preparer: '' },
-        row3: { yes: false, no: false, time: '', preparer: '' },
-        row3_1: { yes: false, no: false, time: '', preparer: '' },
-        row3_2: { yes: false, no: false, time: '', preparer: '' },
-        row3_3: { yes: false, no: false, time: '', preparer: '' },
-        row3_4: { yes: false, no: false, time: '', preparer: '' },
-        row4: { yes: false, no: false, time: '', preparer: '' },
-        row5: { yes: false, no: false, time: '', preparer: '' },
-        row6: { yes: false, no: false, time: '', preparer: '' },
-        row7: { yes: false, no: false, time: '', preparer: '' },
-        row8: { yes: false, no: false, time: '', preparer: '' },
-        row9: { yes: false, no: false, time: '', preparer: '' },
-        row10: { yes: false, no: false, time: '', preparer: '' },
-        row11: { yes: false, no: false, time: '', preparer: '' },
-        row12: { yes: false, no: false, time: '', preparer: '' },
+        row1: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row1_1: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row1_2: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row1_3: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row2: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row2_1: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row2_2: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row2_3: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row3: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row3_1: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row3_2: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row3_3: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row3_4: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row4: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row5: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row6: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row7: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row8: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row9: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row10: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row11: { yes: false, no: false, time: '', date: '', preparer: '' },
+        row12: { yes: false, no: false, time: '', date: '', preparer: '' },
     },
     // Inner data
     innerData: {

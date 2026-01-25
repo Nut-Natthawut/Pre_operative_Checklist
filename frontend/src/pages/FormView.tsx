@@ -492,8 +492,8 @@ export default function ViewFormPage() {
                             <th className="border-r border-black py-2 px-2 font-medium w-[50%] text-center">รายการ</th>
                             <th className="border-r border-black py-2 px-1 font-medium w-[7%] text-center">Yes</th>
                             <th className="border-r border-black py-2 px-1 font-medium w-[7%] text-center">No</th>
-                            <th className="border-r border-black py-2 px-1 font-medium w-[10%] text-center">เวลา</th>
-                            <th className="py-2 px-1 font-medium w-[26%] text-center">ผู้เตรียม</th>
+                            <th className="border-r border-black py-2 px-1 font-medium w-[18%] text-center">เวลา/วันที่</th>
+                            <th className="py-2 px-1 font-medium w-[18%] text-center">ผู้เตรียม</th>
                         </tr>
                     </thead>
                     <tbody>
