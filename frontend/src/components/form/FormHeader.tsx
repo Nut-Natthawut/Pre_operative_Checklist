@@ -29,7 +29,7 @@ export default function FormHeader({
     formMonth,
     formYear,
     updateField,
-    fillCurrentDate,
+    fillCurrentDate: _fillCurrentDate,
     disabled = false
 }: FormHeaderProps) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);

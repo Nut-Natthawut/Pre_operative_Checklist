@@ -7,8 +7,10 @@ import { toast } from 'sonner';
 
 // Import shared types and components
 import type { FormData } from '../types/form';
-import { initialFormData, thaiMonths } from '../types/form';
+import { initialFormData } from '../types/form';
 import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components/form';
+import { mapBackendToFormData } from '../services/formService';
+import { thaiMonthsFull, toISODate, getCurrentTime } from '../utils/date';
 
 
 export default function ViewFormPage() {
@@ -39,7 +41,7 @@ export default function ViewFormPage() {
 
     // Load Data
     useEffect(() => {
-        const loadForm = async () => {
+        const loadFormData = async () => {
             if (!formId) return;
             setLoading(true);
             try {
@@ -47,182 +49,22 @@ export default function ViewFormPage() {
                 if (response.success && response.data) {
                     const backendData = response.data.form as any;
 
-                    // Convert Date ISO -> Thai
-                    let fDate = '', fMonth = '', fYear = '';
-                    if (backendData.formDate) {
-                        const dateObj = new Date(backendData.formDate);
-                        fDate = dateObj.getDate().toString();
-                        fMonth = thaiMonths[dateObj.getMonth()];
-                        fYear = (dateObj.getFullYear() + 543).toString();
-                    }
+                    // Use helper to map backend data to FormData
+                    const mappedData = mapBackendToFormData(backendData);
 
-
-                    const resultOr = backendData.resultOr || initialFormData.result;
                     // Check if editable:
                     // 1. If Admin -> Always editable
                     // 2. If User -> Only editable if Checkbox 'Complete' is NOT checked
-                    // Note: isLocked logic still applies for existing fields even if editable.
+                    const resultOr = backendData.resultOr || initialFormData.result;
                     let canEdit = true;
                     if (resultOr.complete && !isAdmin) {
                         canEdit = false;
                     }
                     setIsEditable(canEdit);
 
-                    // Map fields back
-                    setFormData({
-                        formDate: fDate,
-                        formMonth: fMonth,
-                        formYear: fYear,
-
-                        patientName: backendData.patientName || '',
-                        sex: backendData.sex || '',
-                        age: backendData.age || '',
-                        // Detect allergyStatus from allergy value: 'NKDA' = ปฏิเสธ, has value = แพ้, empty = unknown
-                        allergyStatus: backendData.allergy === 'NKDA' ? 'no' : (backendData.allergy ? 'yes' : 'unknown'),
-                        allergy: backendData.allergy === 'NKDA' ? '' : (backendData.allergy || ''),
-                        ward: backendData.ward || '',
-                        hn: backendData.hn || '',
-                        an: backendData.an || '',
-                        bed: backendData.bed || '',
-                        diagnosis: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).diagnosis || '') : '',
-                        operation: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).operation || '') : '',
-                        physician: backendData.attendingPhysician || '',
-
-                        rows: backendData.orChecklist || initialFormData.rows,
-
-                        innerData: {
-                            valuablesRemoved: backendData.riskConditions?.valuablesRemoved || false,
-                            valuablesFixed: backendData.riskConditions?.valuablesFixed || false,
-
-                            consentAdult: backendData.consentData?.consentAdult || false,
-                            consentMarried: backendData.consentData?.consentMarried || false,
-                            consentChild: backendData.consentData?.consentChild || false,
-                            consentChildGuardian: backendData.consentData?.consentChildGuardian || '',
-
-                            npoSolid: backendData.npoData?.npoSolid || false,
-                            npoLiquid: backendData.npoData?.npoLiquid || false,
-
-                            ivFluidDetail: backendData.ivData?.ivFluidDetail || '',
-
-                            labCbc: backendData.anesLab?.labCbc || false,
-                            labUa: backendData.anesLab?.labUa || false,
-                            labElectrolyte: backendData.anesLab?.labElectrolyte || false,
-                            labPtPtt: backendData.anesLab?.labPtPtt || false,
-                            labOther: backendData.anesLab?.labOther || false,
-                            labOtherDetail: backendData.anesLab?.labOtherDetail || '',
-                            labFilm: backendData.anesLab?.labFilm || false,
-
-                            medsDetail: backendData.premedication || '',
-                        },
-
-                        result: (() => {
-                            // Transform checkDate to Thai format if needed
-                            const transformedResult = { ...resultOr };
-                            if (resultOr.checkDate) {
-                                const dateStr = resultOr.checkDate;
-                                let parsedDate: Date | null = null;
-
-                                // Check if it's ISO format (2026-01-13)
-                                if (dateStr.includes('-')) {
-                                    parsedDate = new Date(dateStr);
-                                }
-                                // Check if it's in slash format
-                                else if (dateStr.includes('/')) {
-                                    const parts = dateStr.split('/');
-                                    if (parts.length === 3) {
-                                        const first = parseInt(parts[0]);
-                                        const second = parseInt(parts[1]);
-                                        const third = parseInt(parts[2]);
-
-                                        // If third part is > 2500, it's already Thai year
-                                        if (third > 2500) {
-                                            // Already in DD/MM/พ.ศ. format, return as is
-                                            return transformedResult;
-                                        } else {
-                                            // It's in some format with ค.ศ.
-                                            // Try MM/DD/YYYY first (if first <= 12)
-                                            if (first <= 12 && second <= 31) {
-                                                parsedDate = new Date(third, first - 1, second);
-                                            } else {
-                                                // DD/MM/YYYY
-                                                parsedDate = new Date(third, second - 1, first);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                                    const day = parsedDate.getDate();
-                                    const month = parsedDate.getMonth() + 1;
-                                    const year = parsedDate.getFullYear() + 543;
-                                    transformedResult.checkDate = `${day}/${month}/${year}`;
-                                }
-                            }
-                            return transformedResult;
-                        })(),
-                    });
-
-                    // Set original data for locking logic
-                    setOriginalData({
-                        formDate: fDate,
-                        formMonth: fMonth,
-                        formYear: fYear,
-
-                        patientName: backendData.patientName || '',
-                        sex: backendData.sex || '',
-                        age: backendData.age || '',
-                        // Detect allergyStatus from allergy value: 'NKDA' = ปฏิเสธ, has value = แพ้, empty = unknown
-                        allergyStatus: backendData.allergy === 'NKDA' ? 'no' : (backendData.allergy ? 'yes' : 'unknown'),
-                        allergy: backendData.allergy === 'NKDA' ? '' : (backendData.allergy || ''),
-                        ward: backendData.ward || '',
-                        hn: backendData.hn || '',
-                        an: backendData.an || '',
-                        bed: backendData.bed || '',
-                        diagnosis: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).diagnosis || '') : '',
-                        operation: backendData.otherNotes ? (JSON.parse(backendData.otherNotes).operation || '') : '',
-                        physician: backendData.attendingPhysician || '',
-
-                        rows: backendData.orChecklist || initialFormData.rows,
-
-                        innerData: {
-                            valuablesRemoved: backendData.riskConditions?.valuablesRemoved || false,
-                            valuablesFixed: backendData.riskConditions?.valuablesFixed || false,
-
-                            consentAdult: backendData.consentData?.consentAdult || false,
-                            consentMarried: backendData.consentData?.consentMarried || false,
-                            consentChild: backendData.consentData?.consentChild || false,
-                            consentChildGuardian: backendData.consentData?.consentChildGuardian || '',
-
-                            npoSolid: backendData.npoData?.npoSolid || false,
-                            npoLiquid: backendData.npoData?.npoLiquid || false,
-
-                            ivFluidDetail: backendData.ivData?.ivFluidDetail || '',
-
-                            labCbc: backendData.anesLab?.labCbc || false,
-                            labUa: backendData.anesLab?.labUa || false,
-                            labElectrolyte: backendData.anesLab?.labElectrolyte || false,
-                            labPtPtt: backendData.anesLab?.labPtPtt || false,
-                            labOther: backendData.anesLab?.labOther || false,
-                            labOtherDetail: backendData.anesLab?.labOtherDetail || '',
-                            labFilm: backendData.anesLab?.labFilm || false,
-
-                            medsDetail: backendData.premedication || '',
-                        },
-
-                        result: (() => {
-                            // Same transform logic just to match structural consistency
-                            const transformedResult = { ...resultOr };
-                            if (resultOr.checkDate) {
-                                // (Re-use parsing logic or just keep string if strictly checking value)
-                                // For locking, exact string match or truthy check is enough.
-                                // Let's use the final formatted value if possible or just use backend value.
-                                // Simpler: just copy what we set to formData.
-                                // Ideally we should extract the transform logic to a function but for now duplicating the end result object is safer.
-                                return transformedResult;
-                            }
-                            return transformedResult;
-                        })()
-                    });
+                    // Set form data and original data for locking
+                    setFormData(mappedData);
+                    setOriginalData(mappedData);
                 }
             } catch (err) {
                 console.error(err);
@@ -233,9 +75,9 @@ export default function ViewFormPage() {
         };
 
         if (isLoggedIn) {
-            loadForm();
+            loadFormData();
         }
-    }, [formId, isLoggedIn]);
+    }, [formId, isLoggedIn, isAdmin]);
 
     // Helpers
 
@@ -322,7 +164,7 @@ export default function ViewFormPage() {
         if (!isEditable) return;
         const now = new Date();
         const day = now.getDate().toString();
-        const month = thaiMonths[now.getMonth()];
+        const month = thaiMonthsFull[now.getMonth()];
         const year = (now.getFullYear() + 543).toString();
         setFormData(prev => ({
             ...prev,
@@ -332,10 +174,7 @@ export default function ViewFormPage() {
         }));
     };
 
-    const getCurrentTime = () => {
-        const now = new Date();
-        return now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-    };
+
 
 
 
@@ -347,18 +186,9 @@ export default function ViewFormPage() {
         setSubmitting(true);
 
         try {
-            // 1. Convert Date
-            const thaiMonthIndex = thaiMonths.indexOf(formData.formMonth);
-            const yearAD = parseInt(formData.formYear || '0') - 543;
-            const monthStr = (thaiMonthIndex + 1).toString().padStart(2, '0');
-            const dayStr = formData.formDate.padStart(2, '0');
-
-            let isoDate = '';
-            if (thaiMonthIndex !== -1 && !isNaN(yearAD) && formData.formDate) {
-                isoDate = `${yearAD}-${monthStr}-${dayStr}`;
-            } else {
-                isoDate = new Date().toISOString().split('T')[0];
-            }
+            // 1. Convert Date using helper
+            const isoDate = toISODate(formData.formDate, formData.formMonth, formData.formYear)
+                || new Date().toISOString().split('T')[0];
 
             // 2. Prepare Payload
             const payload = {

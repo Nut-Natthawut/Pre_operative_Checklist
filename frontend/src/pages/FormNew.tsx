@@ -1,107 +1,65 @@
+// FormNew Page - Create new pre-operative form
+// Refactored to use hooks and services for cleaner code
 
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
 import { toast } from 'sonner';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// Import shared types and components
-import type { FormData } from '../types/form';
-import { initialFormData } from '../types/form';
-// Components wlll be used after refactoring is complete
+// Hooks & Services
+import { useForm } from '../hooks/useForm';
+import { submitForm } from '../services/formService';
+
+// Types
+import type { RowsData } from '../types/form';
+
+// Components
 import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components/form';
 
+// ============================================
+// MAIN COMPONENT
+// ============================================
 
 export default function NewFormPage() {
     const { isLoggedIn, isLoading } = useAuth();
     const navigate = useNavigate();
-    const [formData, setFormData] = useState<FormData>(initialFormData);
+
+    // Form state from custom hook
+    const {
+        formData,
+        updateField,
+        updateRow,
+        updateInner,
+        updateResult,
+        fillCurrentDate
+    } = useForm();
+
+    // UI state
     const [submitting, setSubmitting] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-    // Redirect to login if not authenticated
+    // ============================================
+    // AUTH CHECK
+    // ============================================
+
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
             navigate('/login');
         }
     }, [isLoading, isLoggedIn, navigate]);
 
-    // Show loading while checking auth
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center">กำลังโหลด...</div>;
     }
 
-    // Don't render if not logged in (will redirect)
     if (!isLoggedIn) {
         return null;
     }
 
-    const updateField = (field: string, value: unknown) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    // Update right-side grid
-    const updateRow = (rowKey: string, field: string, value: unknown) => {
-        setFormData(prev => ({
-            ...prev,
-            rows: {
-                ...prev.rows,
-                [rowKey]: {
-                    ...(prev.rows as any)[rowKey],
-                    [field]: value
-                }
-            }
-        }));
-    };
-
-    // Update inner content
-    const updateInner = (field: string, value: unknown) => {
-        setFormData(prev => ({
-            ...prev,
-            innerData: {
-                ...prev.innerData,
-                [field]: value
-            }
-        }));
-    };
-
-    const updateResult = (field: string, value: unknown) => {
-        setFormData(prev => ({
-            ...prev,
-            result: {
-                ...prev.result,
-                [field]: value
-            }
-        }));
-    };
-
-    // Thai month names
-    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-
-    // Fill current Thai date in header
-    const fillCurrentDate = () => {
-        const now = new Date();
-        const day = now.getDate().toString();
-        const month = thaiMonths[now.getMonth()];
-        const year = (now.getFullYear() + 543).toString();
-        setFormData(prev => ({
-            ...prev,
-            formDate: day,
-            formMonth: month,
-            formYear: year
-        }));
-    };
-
-    // Get current time in HH:MM format
-    const getCurrentTime = () => {
-        const now = new Date();
-        return now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-    };
-
-    // Fill time for a specific row
-
+    // ============================================
+    // HANDLERS
+    // ============================================
 
     const handleSubmit = () => {
         setShowConfirmModal(true);
@@ -111,102 +69,7 @@ export default function NewFormPage() {
         setSubmitting(true);
 
         try {
-            // 1. Convert Date
-            const thaiMonthIndex = thaiMonths.indexOf(formData.formMonth);
-            const yearAD = parseInt(formData.formYear || '0') - 543;
-            const monthStr = (thaiMonthIndex + 1).toString().padStart(2, '0');
-            const dayStr = formData.formDate.padStart(2, '0');
-
-            // Validating date
-            let isoDate = '';
-            if (thaiMonthIndex !== -1 && !isNaN(yearAD) && formData.formDate) {
-                isoDate = `${yearAD}-${monthStr}-${dayStr}`;
-            } else {
-                // Fallback to today if invalid
-                isoDate = new Date().toISOString().split('T')[0];
-            }
-
-            // 2. Prepare Payload
-            const payload = {
-                // Header
-                formDate: isoDate,
-                formTime: getCurrentTime(), // Use current time or formData.result.checkTime if preferred
-                ward: formData.ward,
-
-                // Patient Info
-                hn: formData.hn,
-                an: formData.an,
-                patientName: formData.patientName,
-                sex: formData.sex,
-                age: formData.age,
-                // allergyStatus: 'no' -> 'NKDA', 'yes' -> allergy value, 'unknown' -> empty
-                allergy: formData.allergyStatus === 'no' ? 'NKDA' : (formData.allergyStatus === 'yes' ? formData.allergy : ''),
-                bed: formData.bed,
-                department: '', // Not in form
-                weight: '', // Not in form
-                attendingPhysician: formData.physician, // Mapping physician -> attendingPhysician
-                diagnosis: formData.diagnosis, // Note: Schema might not have explicit diagnosis column in root, check schema? 
-                // Schema.ts doesn't have diagnosis column! It might be part of otherNotes or just missing. 
-                // Let's check schema again. Schema has: an, patientName, sex, ... department, weight, rightSide, allergy, attendingPhysician, bed.
-                // Diagnosis and Operation are NOT in the root schema in schema.ts provided earlier? 
-                // Wait, let's re-read schema.ts view output.
-                // Line 30: patientName, 31: sex, ... 38: attendingPhysician, 39: bed.
-                // Missing diagnosis and operation in schema.ts root columns?
-                // I will put them in `otherNotes` or just send them and if backend ignores them, fine. 
-                // actually, let's put them in `otherNotes` to be safe if they are critical.
-
-                // Checklists
-                orChecklist: formData.rows,
-
-                // Inner Data Sections
-                consentData: {
-                    consentAdult: formData.innerData.consentAdult,
-                    consentMarried: formData.innerData.consentMarried,
-                    consentChild: formData.innerData.consentChild,
-                    consentChildGuardian: formData.innerData.consentChildGuardian
-                },
-                npoData: {
-                    npoSolid: formData.innerData.npoSolid,
-                    npoLiquid: formData.innerData.npoLiquid
-                },
-                ivData: {
-                    ivFluidDetail: formData.innerData.ivFluidDetail
-                },
-                anesLab: {
-                    labCbc: formData.innerData.labCbc,
-                    labUa: formData.innerData.labUa,
-                    labElectrolyte: formData.innerData.labElectrolyte,
-                    labPtPtt: formData.innerData.labPtPtt,
-                    labOther: formData.innerData.labOther,
-                    labOtherDetail: formData.innerData.labOtherDetail,
-                    labFilm: formData.innerData.labFilm
-                },
-                riskConditions: {
-                    // Mapping valuables here as it's the closest fit or create a new internal structure?
-                    // Schema has riskConditions, but UI has Valuables (Item 6). 
-                    // Let's pass valuables here or in orChecklist?
-                    // Item 6 IS in orChecklist (row6), but inner details (valuablesRemoved/Fixed) need a place.
-                    // Let's put them in `riskConditions` or just extend `orChecklist` rows? 
-                    // `orChecklist` is just the rows.
-                    // Let's put valuables in `otherNotes` JSON or just riskConditions.
-                    valuablesRemoved: formData.innerData.valuablesRemoved,
-                    valuablesFixed: formData.innerData.valuablesFixed
-                },
-
-                premedication: formData.innerData.medsDetail,
-
-                // Result
-                resultOr: formData.result,
-
-                // Other Notes combining diagnosis/operation if needed, or if backend lists them, assume they are there.
-                // Re-checking schema: No diagnosis/operation columns seen.
-                otherNotes: JSON.stringify({
-                    diagnosis: formData.diagnosis,
-                    operation: formData.operation
-                })
-            };
-
-            const response = await api.submitForm(payload);
+            const response = await submitForm(formData);
 
             if (response.success) {
                 toast.success('บันทึกข้อมูลเรียบร้อย');
@@ -222,9 +85,12 @@ export default function NewFormPage() {
         }
     };
 
-    // Render Helper for Grid Cells (Main items with Yes/No radio buttons)
-    const renderGridCells = (rowKey: string, rowSpan?: number) => {
-        const rowData = (formData.rows as any)[rowKey] || {};
+    // ============================================
+    // RENDER HELPERS
+    // ============================================
+
+    const renderGridCells = (rowKey: keyof RowsData, rowSpan?: number) => {
+        const rowData = formData.rows[rowKey] || {};
         return (
             <ChecklistRow
                 rowKey={rowKey}
@@ -234,6 +100,10 @@ export default function NewFormPage() {
             />
         );
     };
+
+    // ============================================
+    // RENDER
+    // ============================================
 
     return (
         <div className="min-h-screen bg-gray-100 p-8 flex justify-center text-black font-sans leading-tight">
@@ -250,6 +120,7 @@ export default function NewFormPage() {
                     </Link>
                 </div>
 
+                {/* Form Header */}
                 <FormHeader
                     formDate={formData.formDate}
                     formMonth={formData.formMonth}
@@ -258,15 +129,16 @@ export default function NewFormPage() {
                     fillCurrentDate={fillCurrentDate}
                 />
 
+                {/* Patient Info */}
                 <PatientInfo
                     formData={formData}
                     updateField={updateField}
                 />
 
-                {/* Gap between tables */}
+                {/* Gap */}
                 <div className="h-6"></div>
 
-                {/* Main List Table */}
+                {/* Main Checklist Table */}
                 <table className="w-full border-collapse border border-black text-sm table-fixed">
                     <thead>
                         <tr className="border-b border-black bg-gray-50">
@@ -278,7 +150,7 @@ export default function NewFormPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* 1 - มี 4 แถว (1 หลัก + 3 ย่อย) */}
+                        {/* 1 - Skin Prep (4 rows) */}
                         <tr className="border-b-0 hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">1. การเตรียมบริเวณผิวหนัง</td>
                             {renderGridCells('row1', 4)}
@@ -293,7 +165,7 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-6">1.3 Mark site</td>
                         </tr>
 
-                        {/* 2 - มี 4 แถว (1 หลัก + 3 ย่อย) */}
+                        {/* 2 - General Cleaning (4 rows) */}
                         <tr className="border-b-0 hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">2. การทำความสะอาดทั่วไป</td>
                             {renderGridCells('row2', 4)}
@@ -308,7 +180,7 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-6">2.3 ล้าง Makeup</td>
                         </tr>
 
-                        {/* 3 - มี 5 แถว (1 หลัก + 4 ย่อย) */}
+                        {/* 3 - Irrigation (5 rows) */}
                         <tr className="border-b-0 hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">3. การสวนล้าง</td>
                             {renderGridCells('row3', 5)}
@@ -326,19 +198,19 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-6">3.4 SSE</td>
                         </tr>
 
-                        {/* 4 */}
+                        {/* 4 - Urination */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">4. การขับถ่ายปัสสาวะก่อนส่ง OR</td>
                             {renderGridCells('row4')}
                         </tr>
 
-                        {/* 5 */}
+                        {/* 5 - Underwear */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">5. ชุดชั้นในถอดแล้ว</td>
                             {renderGridCells('row5')}
                         </tr>
 
-                        {/* 6 - Item with inner checks */}
+                        {/* 6 - Valuables */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3 align-top">
                                 <div>6. ของมีค่า/ฟันปลอม</div>
@@ -356,7 +228,7 @@ export default function NewFormPage() {
                             {renderGridCells('row6')}
                         </tr>
 
-                        {/* 7 */}
+                        {/* 7 - Wristband */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">7. ติดป้ายข้อมือ</td>
                             {renderGridCells('row7')}
@@ -367,15 +239,9 @@ export default function NewFormPage() {
                             <td className="border-r border-black px-2 py-1 pl-3 align-top">
                                 <div>8. CONSENT FORM</div>
                                 <div className="ml-1 mt-1 space-y-1">
-                                    <div className="pl-1">
-                                        Adult &gt; 20 ปี
-                                    </div>
-                                    <div className="pl-1">
-                                        &gt; 17 ปี มีทะเบียนสมรส
-                                    </div>
-                                    <div className="pl-1">
-                                        Child &lt; 20 ปี ผู้ปกครองเซ็น มีพยานเซ็นรับรอง 2 คน
-                                    </div>
+                                    <div className="pl-1">Adult &gt; 20 ปี</div>
+                                    <div className="pl-1">&gt; 17 ปี มีทะเบียนสมรส</div>
+                                    <div className="pl-1">Child &lt; 20 ปี ผู้ปกครองเซ็น มีพยานเซ็นรับรอง 2 คน</div>
                                 </div>
                             </td>
                             {renderGridCells('row8')}
@@ -399,7 +265,7 @@ export default function NewFormPage() {
                             {renderGridCells('row9')}
                         </tr>
 
-                        {/* 10 - IV */}
+                        {/* 10 - IV Fluid */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3">
                                 <div className="flex items-center">
@@ -410,7 +276,7 @@ export default function NewFormPage() {
                             {renderGridCells('row10')}
                         </tr>
 
-                        {/* 11 - Lab */}
+                        {/* 11 - Lab Results */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3 align-top">
                                 <div>11. ผลตรวจห้องปฏิบัติการ</div>
@@ -443,7 +309,7 @@ export default function NewFormPage() {
                             {renderGridCells('row11')}
                         </tr>
 
-                        {/* 12 - Meds & Footer */}
+                        {/* 12 - Medications */}
                         <tr className="border-b border-black hover:bg-gray-50">
                             <td className="border-r border-black px-2 py-1 pl-3 align-top h-24">
                                 <div>12. ยา & อุปกรณ์พิเศษที่ต้องนำมาพร้อมผู้ป่วย</div>
@@ -457,20 +323,15 @@ export default function NewFormPage() {
                             {renderGridCells('row12')}
                         </tr>
 
-                        {/* Final Footer Row inside table structure? Or attached? 
-                            Image shows lines continuing down from the grid columns. 
-                            The Left column is empty/blank.
-                            The Right columns (Yes-Prep) seem merged or used for the footer.
-                        */}
+                        {/* Footer */}
                         <FormFooter
                             result={formData.result}
                             updateResult={updateResult}
                         />
-
                     </tbody>
                 </table>
 
-                {/* Save Button (Not in print) */}
+                {/* Save Button */}
                 <div className="flex justify-center mt-8 print:hidden">
                     <button
                         onClick={handleSubmit}
@@ -487,55 +348,77 @@ export default function NewFormPage() {
 
             {/* Confirm Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
-                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-900">ยืนยันการบันทึกข้อมูล?</h3>
+                <ConfirmModal
+                    formData={formData}
+                    submitting={submitting}
+                    onCancel={() => setShowConfirmModal(false)}
+                    onConfirm={confirmSubmit}
+                />
+            )}
+        </div>
+    );
+}
+
+// ============================================
+// SUB-COMPONENTS
+// ============================================
+
+interface ConfirmModalProps {
+    formData: { hn: string; patientName: string; ward: string };
+    submitting: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+}
+
+function ConfirmModal({ formData, submitting, onCancel, onConfirm }: ConfirmModalProps) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900">ยืนยันการบันทึกข้อมูล?</h3>
+                </div>
+                <div className="px-6 py-6">
+                    <p className="text-gray-600 mb-4">
+                        กรุณาตรวจสอบความถูกต้อง ข้อมูลที่บันทึกแล้วจะไม่สามารถแก้ไขได้
+                    </p>
+                    <div className="bg-blue-50 p-4 rounded-lg space-y-2 text-sm text-blue-800">
+                        <div className="flex justify-between">
+                            <span className="font-semibold">HN:</span>
+                            <span>{formData.hn || '-'}</span>
                         </div>
-                        <div className="px-6 py-6">
-                            <p className="text-gray-600 mb-4">
-                                กรุณาตรวจสอบความถูกต้อง ข้อมูลที่บันทึกแล้วจะไม่สามารถแก้ไขได้
-                            </p>
-                            <div className="bg-blue-50 p-4 rounded-lg space-y-2 text-sm text-blue-800">
-                                <div className="flex justify-between">
-                                    <span className="font-semibold">HN:</span>
-                                    <span>{formData.hn || '-'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold">ชื่อผู้ป่วย:</span>
-                                    <span>{formData.patientName || '-'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold">Ward:</span>
-                                    <span>{formData.ward || '-'}</span>
-                                </div>
-                            </div>
+                        <div className="flex justify-between">
+                            <span className="font-semibold">ชื่อผู้ป่วย:</span>
+                            <span>{formData.patientName || '-'}</span>
                         </div>
-                        <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowConfirmModal(false)}
-                                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                                disabled={submitting}
-                            >
-                                ยกเลิก
-                            </button>
-                            <button
-                                onClick={confirmSubmit}
-                                disabled={submitting}
-                                className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 font-medium shadow-sm transition-colors flex items-center gap-2"
-                            >
-                                {submitting && (
-                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                )}
-                                {submitting ? 'กำลังบันทึก...' : 'ยืนยัน'}
-                            </button>
+                        <div className="flex justify-between">
+                            <span className="font-semibold">Ward:</span>
+                            <span>{formData.ward || '-'}</span>
                         </div>
                     </div>
                 </div>
-            )}
+                <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                        disabled={submitting}
+                    >
+                        ยกเลิก
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        disabled={submitting}
+                        className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 font-medium shadow-sm transition-colors flex items-center gap-2"
+                    >
+                        {submitting && (
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        )}
+                        {submitting ? 'กำลังบันทึก...' : 'ยืนยัน'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
