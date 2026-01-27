@@ -89,7 +89,7 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                     <div className="border-b border-dotted border-black w-24 flex justify-center items-center cursor-pointer">
                         <input
                             type="time"
-                            className={`mx-5 w-full outline-none text-center p-0 bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
+                            className={`w-full outline-none text-center p-0 bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
                             value={result.checkTime}
                             onChange={e => {
                                 updateResult('checkTime', e.target.value);
