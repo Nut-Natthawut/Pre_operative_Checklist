@@ -59,14 +59,45 @@ export default function PatientInfo({ formData, updateField, disabled = false, i
                             disabled={isFieldDisabled('age')}
                         />
                     </div>
-                    <div className="flex items-end gap-2 flex-[2_1_200px]">
+                    <div className="flex items-end gap-2 flex-[3_1_350px]">
                         <span className="font-bold whitespace-nowrap mb-1">แพ้ยา:</span>
-                        <input
-                            className="flex-1 min-w-0 bg-transparent border-b border-dotted border-black outline-none py-1 px-1"
-                            value={formData.allergy}
-                            onChange={e => updateField('allergy', e.target.value)}
-                            disabled={isFieldDisabled('allergy')}
-                        />
+                        <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="allergyStatus"
+                                className="w-4 h-4"
+                                checked={formData.allergyStatus === 'no'}
+                                onChange={() => {
+                                    updateField('allergyStatus', 'no');
+                                    updateField('allergy', '');
+                                }}
+                                disabled={isFieldDisabled('allergyStatus')}
+                            />
+                            <span className="text-sm">ปฏิเสธ</span>
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="allergyStatus"
+                                className="w-4 h-4"
+                                checked={formData.allergyStatus === 'yes'}
+                                onChange={() => updateField('allergyStatus', 'yes')}
+                                disabled={isFieldDisabled('allergyStatus')}
+                            />
+                            <span className="text-sm">แพ้</span>
+                        </label>
+                        {formData.allergyStatus === 'yes' && (
+                            <input
+                                className="flex-1 min-w-[100px] bg-transparent border-b border-dotted border-black outline-none py-1 px-1 text-red-600 font-semibold"
+                                value={formData.allergy}
+                                onChange={e => updateField('allergy', e.target.value)}
+                                disabled={isFieldDisabled('allergy')}
+                                placeholder="ระบุยาที่แพ้..."
+                            />
+                        )}
+                        {formData.allergyStatus === 'no' && (
+                            <span className="text-sm text-gray-500 border-b border-dotted border-black py-1 px-1">ไม่มี</span>
+                        )}
                     </div>
                 </div>
 
