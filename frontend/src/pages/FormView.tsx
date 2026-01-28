@@ -14,7 +14,7 @@ import { thaiMonthsFull, toISODate, getCurrentTime } from '../utils/date';
 
 
 export default function ViewFormPage() {
-    const { isLoggedIn, isLoading: authLoading, isAdmin } = useAuth();
+    const { isLoggedIn, isLoading: authLoading, isAdmin, user } = useAuth();
     const navigate = useNavigate();
     const params = useParams();
     const formId = params.id as string;
@@ -54,12 +54,24 @@ export default function ViewFormPage() {
 
                     // Check if editable:
                     // 1. If Admin -> Always editable
-                    // 2. If User -> Only editable if Checkbox 'Complete' is NOT checked
+                    // 2. If Owner -> Editable if 'Complete' is NOT checked
+                    // 3. Others -> Read only
                     const resultOr = backendData.resultOr || initialFormData.result;
-                    let canEdit = true;
-                    if (resultOr.complete && !isAdmin) {
+                    let canEdit = false;
+
+                    const isOwner = user?.id === backendData.createdBy;
+
+                    if (isAdmin) {
+                        canEdit = true;
+                    } else if (isOwner) {
+                        if (!resultOr.complete) {
+                            canEdit = true;
+                        }
+                    } else {
+                        // Not owner, not admin -> Read only
                         canEdit = false;
                     }
+
                     setIsEditable(canEdit);
 
                     // Set form data and original data for locking
@@ -77,29 +89,42 @@ export default function ViewFormPage() {
         if (isLoggedIn) {
             loadFormData();
         }
-    }, [formId, isLoggedIn, isAdmin]);
+    }, [formId, isLoggedIn, isAdmin, user]);
 
     // Helpers
 
     // Helper to check if a field is locked (had value in originalData)
     // Admin ignores lock (can edit everything)
     const isLocked = (path: string, subPath?: string) => {
+        // Admin can edit everything
         if (isAdmin) return false;
+
+        // If form is not editable (Completed), everything is locked
+        if (!isEditable) return true;
+
         if (!originalData) return false;
 
         if (path === 'rows') {
             // Usage: isLocked('rows', 'row1.yes') 
             if (!subPath) return false;
             // subPath e.g. 'row1.yes'
-            const [rowKey, field] = subPath.split('.');
-            const row = originalData.rows[rowKey as keyof typeof originalData.rows];
-            if (!row) return false;
+            const [rowKey] = subPath.split('.');
 
-            // If preparer has value, lock the entire row
-            if (row.preparer) return true;
+            // Check originalData to see if it WAS locked permissions-wise.
+            const originalRow = originalData.rows[rowKey as keyof typeof originalData.rows];
+            if (!originalRow) return false;
 
-            const val = row[field as keyof typeof row];
-            return !!val; // true if had value
+            // Row Locking Logic:
+            // 1. If no preparer yet -> Open to everyone
+            if (!originalRow.preparer) return false;
+
+            // 2. If preparer exists -> Only the preparer (user.fullName) can edit
+            if (user?.fullName && originalRow.preparer === user.fullName) {
+                return false; // Unlock for owner
+            }
+
+            // 3. Otherwise -> Locked
+            return true;
         }
 
         if (path === 'innerData') {
@@ -272,6 +297,7 @@ export default function ViewFormPage() {
                 rowSpan={rowSpan}
                 disabled={!isEditable && !isAdmin}
                 isLocked={isLocked}
+                currentUserFullName={user?.fullName}
             />
         );
     };
