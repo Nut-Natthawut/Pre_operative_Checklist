@@ -22,7 +22,7 @@ import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components
 // ============================================
 
 export default function NewFormPage() {
-    const { isLoggedIn, isLoading } = useAuth();
+    const { isLoggedIn, isLoading, user } = useAuth();
     const navigate = useNavigate();
 
     // Form state from custom hook
@@ -97,6 +97,7 @@ export default function NewFormPage() {
                 rowData={rowData}
                 updateRow={updateRow}
                 rowSpan={rowSpan}
+                currentUserFullName={user?.fullName}
             />
         );
     };

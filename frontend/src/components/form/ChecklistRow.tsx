@@ -23,6 +23,7 @@ interface ChecklistRowProps {
     rowSpan?: number;
     disabled?: boolean;
     isLocked?: (path: string, subPath?: string) => boolean;
+    currentUserFullName?: string;
 }
 
 export default function ChecklistRow({
@@ -31,7 +32,8 @@ export default function ChecklistRow({
     updateRow,
     rowSpan,
     disabled = false,
-    isLocked
+    isLocked,
+    currentUserFullName
 }: ChecklistRowProps) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const prevDateRef = useRef(rowData.date);
@@ -283,6 +285,13 @@ export default function ChecklistRow({
                         className="w-full h-full text-center outline-none bg-transparent"
                         value={rowData.preparer}
                         onChange={e => updateRow(rowKey, 'preparer', e.target.value)}
+                        onFocus={() => {
+                            // ถ้าช่องว่าง + เรามีชื่อ + ช่องไม่ถูกล็อค
+                            if (!rowData.preparer && currentUserFullName && !disabled && !isLockedPreparer) {
+                                // เติมชื่อเราลงไป
+                                updateRow(rowKey, 'preparer', currentUserFullName);
+                            }
+                        }}
                         disabled={disabled || isLockedPreparer}
                     />
                 </div>
