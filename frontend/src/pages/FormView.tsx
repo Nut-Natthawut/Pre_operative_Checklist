@@ -57,18 +57,10 @@ export default function ViewFormPage() {
                     // 2. If Owner -> Editable if 'Complete' is NOT checked
                     // 3. Others -> Read only
                     const resultOr = backendData.resultOr || initialFormData.result;
-                    let canEdit = false;
+                    let canEdit = true;
 
-                    const isOwner = user?.id === backendData.createdBy;
 
-                    if (isAdmin) {
-                        canEdit = true;
-                    } else if (isOwner) {
-                        if (!resultOr.complete) {
-                            canEdit = true;
-                        }
-                    } else {
-                        // Not owner, not admin -> Read only
+                    if (!isAdmin && resultOr.complete) {
                         canEdit = false;
                     }
 
@@ -115,15 +107,18 @@ export default function ViewFormPage() {
             if (!originalRow) return false;
 
             // Row Locking Logic:
-            // 1. If no preparer yet -> Open to everyone
+            // Case 1: Empty row (No preparer signature)
+            // -> Editable by ANYONE (First come, first served)
             if (!originalRow.preparer) return false;
 
-            // 2. If preparer exists -> Only the preparer (user.fullName) can edit
+            // Case 2: Row already signed
+            // -> Only editable if I am the preparer (My row)
             if (user?.fullName && originalRow.preparer === user.fullName) {
-                return false; // Unlock for owner
+                return false; // Unlock for me
             }
 
-            // 3. Otherwise -> Locked
+            // Case 3: Signed by someone else
+            // -> Locked for me (Read-only)
             return true;
         }
 
