@@ -105,7 +105,7 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                     <span>น.</span>
                     <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
                     <input
-                        className="border-b border-dotted border-black flex-1 outline-none text-center"
+                        className="border-b border-dotted border-black flex-1 outline-none text-center min-w-[100px]"
                         value={result.checkDate}
                         readOnly
                         placeholder="เลือกวันที่"
