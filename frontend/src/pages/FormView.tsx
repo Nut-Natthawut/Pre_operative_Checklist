@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
@@ -12,6 +12,12 @@ import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components
 import { mapBackendToFormData } from '../services/formService';
 import { thaiMonthsFull, toISODate, getCurrentTime } from '../utils/date';
 
+// GSAP
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
+
 
 export default function ViewFormPage() {
     const { isLoggedIn, isLoading: authLoading, isAdmin, user } = useAuth();
@@ -19,16 +25,30 @@ export default function ViewFormPage() {
     const params = useParams();
     const formId = params.id as string;
 
+    // State Declarations
     const [formData, setFormData] = useState<FormData>(initialFormData);
-    // Store original data loaded from DB to lock existing fields
     const [originalData, setOriginalData] = useState<FormData | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-    // Editable state: true if notComplete is true
     const [isEditable, setIsEditable] = useState(false);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // GSAP Animation
+    useGSAP(() => {
+        if (loading) return;
+
+        const tl = gsap.timeline();
+
+        // Hospital Speed: Fast & Professional (Total time ~0.6s)
+        tl.from(".paper-container", { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" })
+            .from("h1, h2, h3", { y: -10, opacity: 0, stagger: 0.05, duration: 0.3 }, "-=0.2")
+            .from(".form-header, .patient-info", { x: -10, opacity: 0, stagger: 0.1, duration: 0.3 }, "-=0.2")
+            .from("tr", { y: 10, opacity: 0, stagger: 0.01, duration: 0.3 }, "-=0.1")
+            .from(".form-footer", { y: 10, opacity: 0, duration: 0.3 }, "-=0.2");
+
+    }, { scope: containerRef, dependencies: [loading] });
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -57,18 +77,10 @@ export default function ViewFormPage() {
                     // 2. If Owner -> Editable if 'Complete' is NOT checked
                     // 3. Others -> Read only
                     const resultOr = backendData.resultOr || initialFormData.result;
-                    let canEdit = false;
+                    let canEdit = true;
 
-                    const isOwner = user?.id === backendData.createdBy;
 
-                    if (isAdmin) {
-                        canEdit = true;
-                    } else if (isOwner) {
-                        if (!resultOr.complete) {
-                            canEdit = true;
-                        }
-                    } else {
-                        // Not owner, not admin -> Read only
+                    if (!isAdmin && resultOr.complete) {
                         canEdit = false;
                     }
 
@@ -115,15 +127,18 @@ export default function ViewFormPage() {
             if (!originalRow) return false;
 
             // Row Locking Logic:
-            // 1. If no preparer yet -> Open to everyone
+            // Case 1: Empty row (No preparer signature)
+            // -> Editable by ANYONE (First come, first served)
             if (!originalRow.preparer) return false;
 
-            // 2. If preparer exists -> Only the preparer (user.fullName) can edit
+            // Case 2: Row already signed
+            // -> Only editable if I am the preparer (My row)
             if (user?.fullName && originalRow.preparer === user.fullName) {
-                return false; // Unlock for owner
+                return false; // Unlock for me
             }
 
-            // 3. Otherwise -> Locked
+            // Case 3: Signed by someone else
+            // -> Locked for me (Read-only)
             return true;
         }
 
@@ -303,7 +318,7 @@ export default function ViewFormPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-200 p-8 flex justify-center text-black font-sans leading-tight relative">
+        <div ref={containerRef} className="min-h-screen bg-gray-200 p-8 flex justify-center text-black font-sans leading-tight relative">
 
             {/* Banner */}
             <div className="absolute top-4 right-8 px-4 py-1 rounded-full font-bold shadow-sm print:hidden z-10 flex items-center gap-2">
@@ -315,7 +330,7 @@ export default function ViewFormPage() {
             </div>
 
             {/* Paper Container - A4ish */}
-            <div className="w-[240mm] bg-white shadow-lg p-10 relative">
+            <div className="paper-container w-[240mm] bg-white shadow-lg p-10 relative">
 
                 {/* Navigation Back */}
                 <div className="absolute left-4 top-4 print:hidden">
@@ -499,6 +514,9 @@ export default function ViewFormPage() {
                                     </div>
                                     <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> Film/PACs
+                                    </label>
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labEkg} onChange={e => updateInner('labEkg', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> EKG
                                     </label>
                                 </div>
                             </td>

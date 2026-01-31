@@ -432,22 +432,22 @@ export default function DashboardPage() {
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     {log.status === 'green' ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                                             {log.statusMessage || 'พร้อมผ่าตัด'}
                                                         </span>
                                                     ) : log.status === 'yellow' ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                                                             {log.statusMessage || 'กำลังดำเนินการ'}
                                                         </span>
                                                     ) : log.status === 'red' ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                                                             {log.statusMessage || 'ยังไม่เริ่มต้น'}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-gray-400">-</span>
+                                                        <span className="text-gray-400 font-light">-</span>
                                                     )}
                                                 </td>
                                                 <td className="py-4 px-6 text-center">

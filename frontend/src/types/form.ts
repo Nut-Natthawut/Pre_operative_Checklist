@@ -60,6 +60,7 @@ export interface InnerData {
     labOther: boolean;
     labOtherDetail: string;
     labFilm: boolean;
+    labEkg: boolean;
     // 12. Meds
     medsDetail: string;
 
@@ -163,6 +164,7 @@ export const initialFormData: FormData = {
         labOther: false,
         labOtherDetail: '',
         labFilm: false,
+        labEkg: false,
         medsDetail: '',
     },
     // Result section

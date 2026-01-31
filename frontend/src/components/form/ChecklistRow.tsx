@@ -6,6 +6,7 @@ import type { RowData } from '../../types/form';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { th } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import gsap from 'gsap';
 
 // Register Thai locale
 registerLocale('th', th);
@@ -37,6 +38,29 @@ export default function ChecklistRow({
 }: ChecklistRowProps) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const prevDateRef = useRef(rowData.date);
+
+    // Animation Refs
+    const yesRef = useRef<HTMLInputElement>(null);
+    const noRef = useRef<HTMLInputElement>(null);
+
+    // Pop Animation Effect
+    useEffect(() => {
+        if (rowData.yes && yesRef.current) {
+            gsap.fromTo(yesRef.current,
+                { scale: 0.5 },
+                { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }
+            );
+        }
+    }, [rowData.yes]);
+
+    useEffect(() => {
+        if (rowData.no && noRef.current) {
+            gsap.fromTo(noRef.current,
+                { scale: 0.5 },
+                { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }
+            );
+        }
+    }, [rowData.no]);
 
     // Close DatePicker when date changes (after selection)
     useEffect(() => {
@@ -127,6 +151,7 @@ export default function ChecklistRow({
             >
                 <div className="flex items-center justify-center h-full">
                     <input
+                        ref={yesRef}
                         type="radio"
                         name={`yesno_${rowKey}`}
                         className="w-4 h-4 pointer-events-none"
@@ -145,6 +170,7 @@ export default function ChecklistRow({
             >
                 <div className="flex items-center justify-center h-full">
                     <input
+                        ref={noRef}
                         type="radio"
                         name={`yesno_${rowKey}`}
                         className="w-4 h-4 pointer-events-none"
