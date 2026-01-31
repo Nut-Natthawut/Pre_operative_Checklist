@@ -68,7 +68,8 @@ export function createFormPayload(formData: FormData) {
             labPtPtt: formData.innerData.labPtPtt,
             labOther: formData.innerData.labOther,
             labOtherDetail: formData.innerData.labOtherDetail,
-            labFilm: formData.innerData.labFilm
+            labFilm: formData.innerData.labFilm,
+            labEkg: formData.innerData.labEkg
         },
 
         // Risk Conditions
@@ -246,6 +247,7 @@ export function mapBackendToFormData(backendData: any): FormData {
             labOther: backendData.anesLab?.labOther || false,
             labOtherDetail: backendData.anesLab?.labOtherDetail || '',
             labFilm: backendData.anesLab?.labFilm || false,
+            labEkg: backendData.anesLab?.labEkg || false,
 
             medsDetail: backendData.premedication || '',
         },

@@ -500,6 +500,9 @@ export default function ViewFormPage() {
                                     <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> Film/PACs
                                     </label>
+                                    <label className={`flex items-center gap-2 ${isEditable && !isLocked('rows', 'row11.preparer') ? 'cursor-pointer' : ''}`}>
+                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labEkg} onChange={e => updateInner('labEkg', e.target.checked)} disabled={!isEditable || isLocked('rows', 'row11.preparer')} /> EKG
+                                    </label>
                                 </div>
                             </td>
                             {renderGridCells('row11')}

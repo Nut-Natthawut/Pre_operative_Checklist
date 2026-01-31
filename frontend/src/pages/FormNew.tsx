@@ -255,7 +255,7 @@ export default function NewFormPage() {
                                 <div className="ml-3 mt-1 flex flex-col gap-1">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoSolid} onChange={e => updateInner('npoSolid', e.target.checked)} />
-                                        <span>อาหาร/นม/ครีมเทียม &gt; 6 ชม.</span>
+                                        <span>อาหาร/อาหารอ่อน/นม &gt; 6 ชม.</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" className="w-4 h-4" checked={formData.innerData.npoLiquid} onChange={e => updateInner('npoLiquid', e.target.checked)} />
@@ -296,15 +296,20 @@ export default function NewFormPage() {
                                             <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labPtPtt} onChange={e => updateInner('labPtPtt', e.target.checked)} /> PT,PTT,INR
                                         </label>
                                     </div>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                                        <label className="flex items-center gap-2">
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} /> Film
+                                        </label>
+                                        <label className="flex items-center gap-2">
+                                            <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labEkg} onChange={e => updateInner('labEkg', e.target.checked)} /> EKG
+                                        </label>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <label className="flex items-center gap-2 whitespace-nowrap">
                                             <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labOther} onChange={e => updateInner('labOther', e.target.checked)} /> อื่น ๆ
                                         </label>
                                         <input className="border-b border-dotted border-black flex-1 outline-none ml-1" value={formData.innerData.labOtherDetail} onChange={e => updateInner('labOtherDetail', e.target.value)} />
                                     </div>
-                                    <label className="flex items-center gap-2">
-                                        <input type="checkbox" className="w-4 h-4" checked={formData.innerData.labFilm} onChange={e => updateInner('labFilm', e.target.checked)} /> Film/PACs
-                                    </label>
                                 </div>
                             </td>
                             {renderGridCells('row11')}
