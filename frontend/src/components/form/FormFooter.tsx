@@ -93,8 +93,7 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                             value={result.checkTime}
                             onChange={e => {
                                 updateResult('checkTime', e.target.value);
-                                // Blur only on non-touch devices (PC) to close popup
-                                // Keep open on touch devices (iPad) for scrolling
+                                // Blur only on non-touch devices (PC)
                                 if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
                                     e.target.blur();
                                 }

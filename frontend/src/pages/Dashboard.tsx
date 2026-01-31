@@ -361,12 +361,12 @@ export default function DashboardPage() {
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">เวลา</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">HN</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[20%]">ผู้ป่วย</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[12%]">Ward</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[24%]">สถานะ</th>
-                                    <th className="py-4 px-6 font-semibold text-gray-600 w-[20%] text-center">ดำเนินการ</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[10%]">เวลา</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[12%]">HN</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[28%]">ผู้ป่วย</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[10%]">Ward</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[25%]">สถานะ</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[15%] text-center">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                                         if (dateStr !== prevDateStr) {
                                             acc.push(
                                                 <tr key={`header-${dateStr}`} className="bg-gradient-to-r from-teal-50 to-transparent">
-                                                    <td colSpan={6} className="py-3 px-6">
+                                                    <td colSpan={6} className="py-3 px-3 md:px-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-full bg-med-teal/10 flex items-center justify-center">
                                                                 <svg className="w-4 h-4 text-med-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,9 +408,9 @@ export default function DashboardPage() {
                                             <tr key={log.id}
                                                 className="hover:bg-teal-50/30 transition-colors cursor-pointer group border-l-2 border-transparent hover:border-med-teal"
                                                 onClick={() => navigate(`/form/${log.id}`)}>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-3 md:px-4">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hidden sm:flex">
                                                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
@@ -418,48 +418,49 @@ export default function DashboardPage() {
                                                         <span className="font-medium text-gray-700">{logDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-3 md:px-4">
                                                     <span className="font-bold text-gray-700 group-hover:text-med-teal transition-colors">{log.hn}</span>
                                                     {/* Add AN if available in future */}
                                                 </td>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-3 md:px-4">
                                                     <div className="flex flex-col">
-                                                        <span className="text-gray-900 font-medium">{log.patientName}</span>
+                                                        <span className="text-gray-900 font-medium truncate max-w-[120px] md:max-w-xs">{log.patientName}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6 text-gray-500">
+                                                <td className="py-4 px-3 md:px-4 text-gray-500">
                                                     <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">{log.ward || '-'}</span>
                                                 </td>
-                                                <td className="py-4 px-6">
+                                                <td className="py-4 px-3 md:px-4">
                                                     {log.status === 'green' ? (
-                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm whitespace-nowrap">
-                                                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                             {log.statusMessage || 'พร้อมผ่าตัด'}
                                                         </span>
                                                     ) : log.status === 'yellow' ? (
-                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 shadow-sm whitespace-nowrap">
-                                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                                             {log.statusMessage || 'กำลังดำเนินการ'}
                                                         </span>
                                                     ) : log.status === 'red' ? (
-                                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs md:text-sm font-medium bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 shadow-sm whitespace-nowrap">
-                                                            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 shadow-sm whitespace-nowrap">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                                             {log.statusMessage || 'ยังไม่เริ่มต้น'}
                                                         </span>
                                                     ) : (
                                                         <span className="text-gray-400 font-light">-</span>
                                                     )}
                                                 </td>
-                                                <td className="py-4 px-6 text-center">
+                                                <td className="py-4 px-3 md:px-4 text-center">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); navigate(`/form/${log.id}`); }}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-med-teal bg-teal-50 hover:bg-med-teal hover:text-white border border-med-teal/30 hover:border-transparent text-xs font-medium rounded-md transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+                                                        className="inline-flex items-center gap-1.5 px-2 py-1.5 md:px-3 text-med-teal bg-teal-50 hover:bg-med-teal hover:text-white border border-med-teal/30 hover:border-transparent text-xs font-medium rounded-md transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+                                                        title="ดูฟอร์ม"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                         </svg>
-                                                        ดูฟอร์ม
+                                                        <span className="hidden lg:inline">ดูฟอร์ม</span>
                                                     </button>
                                                 </td>
                                             </tr>
