@@ -84,9 +84,9 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                         disabled={disabled}
                     />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-hidden">
                     <span>เวลา</span>
-                    <div className="border-b border-dotted border-black w-24 flex justify-center items-center cursor-pointer">
+                    <div className="border-b border-dotted border-black w-16 flex justify-center items-center cursor-pointer">
                         <input
                             type="time"
                             className={`w-full outline-none text-center p-0 bg-transparent ${!result.checkTime ? 'text-transparent' : ''}`}
@@ -105,7 +105,7 @@ export default function FormFooter({ result, updateResult, disabled = false }: F
                     <span>น.</span>
                     <span className="whitespace-nowrap">วันที่/เดือน/ปี</span>
                     <input
-                        className="border-b border-dotted border-black flex-1 outline-none text-center min-w-[100px]"
+                        className="border-b border-dotted border-black flex-1 outline-none text-center"
                         value={result.checkDate}
                         readOnly
                         placeholder="เลือกวันที่"
