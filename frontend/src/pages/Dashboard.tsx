@@ -357,16 +357,16 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
+                    <div>
+                        <table className="w-full text-left text-sm table-fixed">
                             <thead>
                                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[10%]">เวลา</th>
-                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[12%]">HN</th>
-                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[28%]">ผู้ป่วย</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[12%]">เวลา</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[14%]">HN</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[26%]">ผู้ป่วย</th>
                                     <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[10%]">Ward</th>
-                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[25%]">สถานะ</th>
-                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[15%] text-center">ดำเนินการ</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[23%]">สถานะ</th>
+                                    <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[15%] text-center whitespace-nowrap">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
