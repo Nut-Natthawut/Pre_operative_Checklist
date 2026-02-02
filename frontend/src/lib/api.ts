@@ -268,6 +268,14 @@ class ApiClient {
       }>;
     }>(url);
   }
+
+  async markSurgeryCompleted(formId: string) {
+    return this.request<{
+      formId: string;
+    }>(`/api/forms/${formId}/surgery-completed`, {
+      method: 'PATCH',
+    });
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
