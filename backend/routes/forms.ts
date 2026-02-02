@@ -122,6 +122,28 @@ formRoutes.get('/search', async (c) => {
     }
     
     const db = c.get('db');
+    const currentUser = c.get('user');
+    const isAdmin = currentUser?.role === 'admin';
+    
+    // Build search condition
+    const searchCondition = or(
+      like(preopForms.hn, `%${hn}%`),
+      like(preopForms.patientName, `%${hn}%`)
+    );
+    
+    // Non-admin users don't see surgery-completed forms
+    let whereCondition;
+    if (!isAdmin) {
+      whereCondition = and(
+        searchCondition,
+        or(
+          eq(preopForms.surgeryCompleted, 0),
+          sql`${preopForms.surgeryCompleted} IS NULL`
+        )
+      );
+    } else {
+      whereCondition = searchCondition;
+    }
     
     const results = await db
       .select({
@@ -133,6 +155,7 @@ formRoutes.get('/search', async (c) => {
         formDate: preopForms.formDate,
         formTime: preopForms.formTime,
         createdAt: preopForms.createdAt,
+        surgeryCompleted: preopForms.surgeryCompleted,
         // Fetch fields for status calculation
         resultOr: preopForms.resultOr,
         anesLab: preopForms.anesLab,
@@ -143,12 +166,7 @@ formRoutes.get('/search', async (c) => {
         npoData: preopForms.npoData,
       })
       .from(preopForms)
-      .where(
-        or(
-          like(preopForms.hn, `%${hn}%`),
-          like(preopForms.patientName, `%${hn}%`)
-        )
-      )
+      .where(whereCondition)
       .all();
     
     // Calculate Status for each result (Same logic as list endpoint)
@@ -288,27 +306,34 @@ formRoutes.get('/', async (c) => {
     const offset = (page - 1) * limit;
     
     const db = c.get('db');
+    const currentUser = c.get('user');
+    const isAdmin = currentUser?.role === 'admin';
     
     // Build date filter condition (optional - if no dates, show all)
-    let whereCondition = undefined;
+    const conditions: ReturnType<typeof eq>[] = [];
+    
     if (startDate && endDate) {
-      // Filter by date range
       const startOfDay = `${startDate}T00:00:00.000Z`;
       const endOfDay = `${endDate}T23:59:59.999Z`;
-      whereCondition = and(
-        gte(preopForms.createdAt, startOfDay),
-        lte(preopForms.createdAt, endOfDay)
-      );
+      conditions.push(gte(preopForms.createdAt, startOfDay));
+      conditions.push(lte(preopForms.createdAt, endOfDay));
     } else if (startDate) {
-      // Only start date provided
       const startOfDay = `${startDate}T00:00:00.000Z`;
-      whereCondition = gte(preopForms.createdAt, startOfDay);
+      conditions.push(gte(preopForms.createdAt, startOfDay));
     } else if (endDate) {
-      // Only end date provided
       const endOfDay = `${endDate}T23:59:59.999Z`;
-      whereCondition = lte(preopForms.createdAt, endOfDay);
+      conditions.push(lte(preopForms.createdAt, endOfDay));
     }
-    // If no dates provided, whereCondition stays undefined = show all
+    
+    // Non-admin users don't see surgery-completed forms
+    if (!isAdmin) {
+      conditions.push(or(
+        eq(preopForms.surgeryCompleted, 0),
+        sql`${preopForms.surgeryCompleted} IS NULL`
+      ) as ReturnType<typeof eq>);
+    }
+    
+    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
     
     // Get total count for pagination
     const countResult = await db
@@ -329,6 +354,7 @@ formRoutes.get('/', async (c) => {
         formDate: preopForms.formDate,
         formTime: preopForms.formTime,
         createdAt: preopForms.createdAt,
+        surgeryCompleted: preopForms.surgeryCompleted,
         // Fetch fields for status calculation
         resultOr: preopForms.resultOr,
         anesLab: preopForms.anesLab,
@@ -502,6 +528,67 @@ formRoutes.put('/:id', async (c) => {
     return c.json({ 
       success: false, 
       message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
+      error: 'Internal server error' 
+    }, 500);
+  }
+});
+
+// PATCH /api/forms/:id/surgery-completed - Mark form as surgery completed
+formRoutes.patch('/:id/surgery-completed', async (c) => {
+  try {
+    const formId = c.req.param('id');
+    const db = c.get('db');
+    const currentUser = c.get('user');
+    
+    // Find the form
+    const form = await db.select().from(preopForms).where(eq(preopForms.id, formId)).get();
+    
+    if (!form) {
+      return c.json({ 
+        success: false, 
+        message: 'ไม่พบข้อมูลฟอร์ม',
+        error: 'Form not found' 
+      }, 404);
+    }
+    
+    // Check if already marked as completed
+    if (form.surgeryCompleted === 1) {
+      return c.json({ 
+        success: false, 
+        message: 'ฟอร์มนี้ถูกทำเครื่องหมายผ่าตัดแล้วก่อนหน้านี้',
+        error: 'Already marked as surgery completed' 
+      }, 400);
+    }
+    
+    // Verify form has green status (พร้อมผ่าตัด)
+    const resultOr = form.resultOr ? JSON.parse(form.resultOr) : {};
+    if (resultOr.complete !== true) {
+      return c.json({ 
+        success: false, 
+        message: 'ฟอร์มยังไม่พร้อมผ่าตัด ไม่สามารถทำเครื่องหมายได้',
+        error: 'Form is not ready for surgery' 
+      }, 400);
+    }
+    
+    // Update the form
+    const now = new Date().toISOString();
+    await db.update(preopForms).set({
+      surgeryCompleted: 1,
+      surgeryCompletedAt: now,
+      surgeryCompletedBy: currentUser?.id || 'unknown',
+    }).where(eq(preopForms.id, formId));
+    
+    return c.json({
+      success: true,
+      message: 'ทำเครื่องหมายผ่าตัดแล้วเรียบร้อย',
+      data: { formId }
+    });
+    
+  } catch (error) {
+    console.error('Mark surgery completed error:', error);
+    return c.json({ 
+      success: false, 
+      message: 'เกิดข้อผิดพลาดในการอัปเดต',
       error: 'Internal server error' 
     }, 500);
   }

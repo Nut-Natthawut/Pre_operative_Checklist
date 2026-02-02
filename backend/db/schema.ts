@@ -55,6 +55,11 @@ export const preopForms = sqliteTable('preop_forms', {
   // QR Code data (will be generated)
   qrCodeData: text('qr_code_data'),
   
+  // Surgery completion tracking
+  surgeryCompleted: integer('surgery_completed').default(0), // 0 = not completed, 1 = completed
+  surgeryCompletedAt: text('surgery_completed_at'), // Timestamp when marked complete
+  surgeryCompletedBy: text('surgery_completed_by'), // User who marked it complete
+  
   // Metadata
   createdAt: text('created_at').notNull(),
   createdBy: text('created_by').notNull(),
