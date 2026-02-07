@@ -25,6 +25,7 @@ interface ChecklistRowProps {
     disabled?: boolean;
     isLocked?: (path: string, subPath?: string) => boolean;
     currentUserFullName?: string;
+    currentUserId?: string;
 }
 
 export default function ChecklistRow({
@@ -34,7 +35,8 @@ export default function ChecklistRow({
     rowSpan,
     disabled = false,
     isLocked,
-    currentUserFullName
+    currentUserFullName,
+    currentUserId
 }: ChecklistRowProps) {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const prevDateRef = useRef(rowData.date);
@@ -301,14 +303,14 @@ export default function ChecklistRow({
                 rowSpan={rowSpan}
                 onClick={(e) => {
                     if (disabled || isLockedPreparer) return;
-                    const input = e.currentTarget.querySelector('input');
-                    if (input) input.focus();
+                    const textarea = e.currentTarget.querySelector('textarea');
+                    if (textarea) textarea.focus();
                 }}
             >
-                <div className="w-full h-full p-2">
-                    <input
-                        type="text"
-                        className="w-full h-full text-center outline-none bg-transparent"
+                <div className="w-full h-full p-1">
+                    <textarea
+                        className="w-full text-center text-xs outline-none bg-transparent resize-none break-words leading-tight"
+                        rows={2}
                         value={rowData.preparer}
                         onChange={e => updateRow(rowKey, 'preparer', e.target.value)}
                         onFocus={() => {
@@ -316,6 +318,10 @@ export default function ChecklistRow({
                             if (!rowData.preparer && currentUserFullName && !disabled && !isLockedPreparer) {
                                 // เติมชื่อเราลงไป
                                 updateRow(rowKey, 'preparer', currentUserFullName);
+                                // เก็บ User ID สำหรับเทียบ lock
+                                if (currentUserId) {
+                                    updateRow(rowKey, 'preparerId', currentUserId);
+                                }
                             }
                         }}
                         disabled={disabled || isLockedPreparer}

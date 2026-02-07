@@ -131,10 +131,15 @@ export default function ViewFormPage() {
             // -> Editable by ANYONE (First come, first served)
             if (!originalRow.preparer) return false;
 
-            // Case 2: Row already signed
-            // -> Only editable if I am the preparer (My row)
-            if (user?.fullName && originalRow.preparer === user.fullName) {
-                return false; // Unlock for me
+            // Case 2: Row already signed - Check by User ID first (reliable)
+            // Then fall back to name comparison for backward compatibility
+            if (user?.id && originalRow.preparerId === user.id) {
+                return false; // Unlock for me (matched by ID)
+            }
+
+            // Fallback: Compare by name (for data saved before preparerId was added)
+            if (user?.fullName && originalRow.preparer?.trim() === user.fullName?.trim()) {
+                return false; // Unlock for me (matched by name)
             }
 
             // Case 3: Signed by someone else
@@ -313,6 +318,7 @@ export default function ViewFormPage() {
                 disabled={!isEditable && !isAdmin}
                 isLocked={isLocked}
                 currentUserFullName={user?.fullName}
+                currentUserId={user?.id}
             />
         );
     };

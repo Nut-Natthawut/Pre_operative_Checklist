@@ -8,6 +8,7 @@ export interface RowData {
     time: string;
     date: string; // Format: "DD/MM/YYYY" in Thai Buddhist Era
     preparer: string;
+    preparerId?: string; // User ID of the preparer for reliable locking
 }
 
 // All rows in the checklist
