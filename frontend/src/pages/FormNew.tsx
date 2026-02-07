@@ -98,6 +98,7 @@ export default function NewFormPage() {
                 updateRow={updateRow}
                 rowSpan={rowSpan}
                 currentUserFullName={user?.fullName}
+                currentUserId={user?.id}
             />
         );
     };
