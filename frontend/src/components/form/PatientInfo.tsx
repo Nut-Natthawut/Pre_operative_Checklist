@@ -96,7 +96,13 @@ export default function PatientInfo({ formData, updateField, disabled = false, i
                             />
                         )}
                         {formData.allergyStatus === 'no' && (
-                            <span className="text-sm text-gray-500 border-b border-dotted border-black py-1 px-1">ไม่มี</span>
+                            <input
+                                className="flex-1 min-w-[100px] bg-transparent border-b border-dotted border-black outline-none py-1 px-1 text-gray-500"
+                                value={formData.allergy}
+                                onChange={e => updateField('allergy', e.target.value)}
+                                disabled={isFieldDisabled('allergy')}
+                                placeholder="ไม่มี"
+                            />
                         )}
                     </div>
                 </div>
