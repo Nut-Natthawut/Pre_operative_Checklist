@@ -90,7 +90,11 @@ Hospital staff traditionally use **paper-based checklists** before surgery — t
 ## 🗂️ Project Structure
 
 ```
-Form_hospital/
+Pre_operative_Checklist/
+├── .github/
+│   └── workflows/
+│       └── deploy-backend.yml  # CI/CD: Auto-deploy backend on push
+│
 ├── frontend/
 │   ├── src/
 │   │   ├── components/       # Reusable UI components
@@ -168,8 +172,8 @@ Form_hospital/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Nut-Natthawut/Form_hospital.git
-cd Form_hospital
+git clone https://github.com/Nut-Natthawut/Pre_operative_Checklist.git
+cd Pre_operative_Checklist
 ```
 
 ### 2. Setup Backend
@@ -215,7 +219,7 @@ Default credentials: `admin` / `admin123`
 
 ## 📦 Deployment
 
-### Backend → Cloudflare Workers
+### Backend → Cloudflare Workers (Manual)
 
 ```bash
 cd backend
@@ -237,6 +241,39 @@ cd frontend
 npm run build
 # Deploy the `dist/` folder to your hosting provider
 ```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+The backend is automatically deployed via **GitHub Actions** whenever code is pushed to `main`.
+
+```mermaid
+flowchart LR
+    A["Push to main"] --> B{"backend/ changed?"}
+    B -- Yes --> C["Install deps"]
+    C --> D["wrangler deploy"]
+    D --> E["✅ Live on Cloudflare Workers"]
+    B -- No --> F["⏭️ Skip"]
+```
+
+### How it works
+
+| Step | What happens |
+|---|---|
+| **Trigger** | Push to `main` branch, only when files in `backend/**` change |
+| **Runner** | `ubuntu-latest` on GitHub Actions |
+| **Build** | Install Node.js 20 + `npm install` |
+| **Deploy** | `npx wrangler deploy` to Cloudflare Workers |
+| **Manual** | Can also be triggered manually via `workflow_dispatch` |
+
+### Required GitHub Secrets
+
+| Secret | How to get it |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens) → Create Token → "Edit Cloudflare Workers" template |
+
+> **Note:** The frontend is deployed separately via Vercel (auto-deploys on push). The CI/CD pipeline only handles the backend.
 
 ---
 
