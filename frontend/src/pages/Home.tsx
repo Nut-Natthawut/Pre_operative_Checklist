@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Users, ArrowRight, Activity, ClipboardList, Zap, Lock } from 'lucide-react';
+import { FileText, Search, Users, ArrowRight, Activity, Zap, Lock } from 'lucide-react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
@@ -128,9 +128,9 @@ const Homepage = () => {
               <Link to="/login" className="px-8 py-4 bg-[#004ac6] text-white font-bold rounded-2xl shadow-[0_16px_40px_rgba(0,74,198,0.3)] hover:shadow-[0_20px_50px_rgba(0,74,198,0.4)] transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
                 เริ่มต้นใช้งาน <ArrowRight size={18} />
               </Link>
-              <Link to="/dashboard" className="px-8 py-4 bg-white text-[#131b2e] border border-[#c3c6d7]/30 font-bold rounded-2xl hover:bg-[#f2f3ff] transition-all active:scale-95 shadow-sm flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+              {/* <Link to="/dashboard" className="px-8 py-4 bg-white text-[#131b2e] border border-[#c3c6d7]/30 font-bold rounded-2xl hover:bg-[#f2f3ff] transition-all active:scale-95 shadow-sm flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
                 <ClipboardList size={18} /> เข้าสู่หน้าระบบ
-              </Link>
+              </Link> */}
             </div>
           </div>
 
