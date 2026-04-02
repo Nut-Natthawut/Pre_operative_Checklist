@@ -17,22 +17,20 @@
 
 ## 📸 Screenshots
 
-<table>
-  <tr>
-    <td align="center" colspan="2"><strong> Homepage</strong></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/homepage.png" alt="Homepage" width="800" /></td>
-  </tr>
-  <tr>
-    <td align="center"><strong> Dashboard</strong></td>
-    <td align="center"><strong> Login</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/dashboard.png" alt="Dashboard" width="500" /></td>
-    <td><img src="docs/screenshots/login.png" alt="Login" width="280" /></td>
-  </tr>
-</table>
+<p align="center">
+  <strong>🏠 Homepage</strong><br>
+  <img src="docs/screenshots/homepage.png" alt="Homepage" width="800" />
+</p>
+
+<p align="center">
+  <strong>📊 Dashboard (Patient List & Search)</strong><br>
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
+</p>
+
+<p align="center">
+  <strong>🔐 Login Form</strong><br>
+  <img src="docs/screenshots/login.png" alt="Login" width="800" />
+</p>
 
 ---
 
