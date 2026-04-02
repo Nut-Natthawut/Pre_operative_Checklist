@@ -192,7 +192,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
             ),
-            color: 'bg-[#009CA6] hover:bg-[#007a82]',
+            color: 'bg-gradient-to-br from-[#004ac6] to-[#2563eb]',
         },
     ];
 
@@ -206,29 +206,42 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
             ),
-            color: 'bg-[#0F7D4B] hover:bg-[#0a5c36]',
+            color: 'bg-gradient-to-br from-[#4648d4] to-[#6063ee]',
         });
     }
 
     return (
         <>
             <div className="min-h-screen bg-[#faf8ff] medical-grid">
-                <header className="bg-white/70 backdrop-blur-xl border-b border-[#c3c6d7]/20 sticky top-0 z-40">
-                    <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-xl font-bold text-[#131b2e]" style={{ fontFamily: "'Inter', sans-serif" }}>รายงานการเตรียมผู้ป่วยก่อนผ่าตัด</h1>
-                            <p className="text-sm text-[#434655]">โรงพยาบาลมหาราชนครเชียงใหม่</p>
+                {/* Top Gradient Brand Bar */}
+                <div className="h-1 w-full bg-gradient-to-r from-[#004ac6] via-[#2563eb] to-[#4648d4]"></div>
+                <header className="bg-white/80 backdrop-blur-xl border-b border-[#c3c6d7]/15 sticky top-0 z-40 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#004ac6] to-[#2563eb] flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-black tracking-tight text-gradient-primary" style={{ fontFamily: "'Inter', sans-serif" }}>Suandok Forms</h1>
+                                <p className="text-xs text-[#434655] font-medium">รายงานการเตรียมผู้ป่วยก่อนผ่าตัด</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <p className="font-medium text-[#131b2e]">{user?.fullName}</p>
-                                <p className="text-sm text-[#434655]">{user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</p>
+                            <div className="text-right hidden sm:block">
+                                <p className="font-semibold text-[#131b2e] text-sm">{user?.fullName}</p>
+                                <p className="text-xs text-[#434655]">{user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</p>
                             </div>
-                            <button onClick={logout} className="btn-secondary flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-9 h-9 rounded-full bg-[#eaedff] flex items-center justify-center text-[#004ac6] font-bold text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                                {user?.fullName?.charAt(0) || 'U'}
+                            </div>
+                            <div className="h-6 w-px bg-[#c3c6d7]/30"></div>
+                            <button onClick={logout} className="text-[#434655] hover:text-[#004ac6] hover:bg-[#004ac6]/5 px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
-                                <span>ออกจากระบบ</span>
+                                <span className="hidden md:inline">ออกจากระบบ</span>
                             </button>
                         </div>
                     </div>
@@ -238,18 +251,21 @@ export default function DashboardPage() {
 
 
                     {/* 2. Main Menu - Action Cards */}
-                    <div className="grid gap-6 grid-cols-1">
+                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                         {menuItems.map((item) => (
-                            <Link key={item.href} to={item.href} className="card hover:shadow-xl transition-all duration-300 group border border-[#c3c6d7]/10 hover:border-[#004ac6]/20 flex items-center p-6 gap-6 relative overflow-hidden rounded-[1.5rem]">
-                                <div className={`w-16 h-16 ${item.color} rounded-[1.25rem] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0 z-10`}>
+                            <Link key={item.href} to={item.href} className="bg-white hover:shadow-2xl transition-all duration-300 group border border-[#c3c6d7]/10 hover:border-[#004ac6]/15 flex items-center p-6 gap-5 relative overflow-hidden rounded-[1.5rem] shadow-sm hover:-translate-y-1">
+                                <div className={`w-14 h-14 ${item.color} rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300 flex-shrink-0 z-10`}>
                                     {item.icon}
                                 </div>
                                 <div className="z-10">
-                                    <h2 className="text-xl font-bold text-[#131b2e] mb-1 group-hover:text-[#004ac6] transition-colors">{item.title}</h2>
+                                    <h2 className="text-lg font-bold text-[#131b2e] mb-0.5 group-hover:text-[#004ac6] transition-colors" style={{ fontFamily: "'Inter', sans-serif" }}>{item.title}</h2>
                                     <p className="text-[#434655] text-sm">{item.description}</p>
                                 </div>
-                                {/* Decor circle */}
-                                <div className={`absolute -right-6 -bottom-6 w-32 h-32 rounded-full opacity-10 ${item.color}`}></div>
+                                {/* Decorative glow */}
+                                <div className={`absolute -right-8 -bottom-8 w-40 h-40 rounded-full opacity-[0.06] ${item.color} blur-xl`}></div>
+                                <svg className="w-5 h-5 text-[#c3c6d7] group-hover:text-[#004ac6] transition-colors ml-auto flex-shrink-0 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                             </Link>
                         ))}
                     </div>
@@ -582,18 +598,19 @@ export default function DashboardPage() {
                         <p>© 2026 CMU Hospital. All rights reserved.</p>
                         <div className="flex items-center justify-center gap-4 mt-2">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                                 <span>System Normal</span>
                             </div>
+                            <div className="h-3 w-px bg-[#c3c6d7]/30"></div>
                             <div className="flex items-center gap-1">
-                                <span className="font-semibold text-gray-500 block mb-0.5">VERSION</span>
+                                <span className="font-semibold text-[#434655]/50">VERSION</span>
                                 <span>v2.0.0 (Beta)</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 mt-2 justify-center">
                             <span>Supported Devices:</span>
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">iPad</span>
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-500">Desktop</span>
+                            <span className="px-2 py-0.5 bg-[#eaedff] rounded-md text-[#434655] text-xs font-medium">iPad</span>
+                            <span className="px-2 py-0.5 bg-[#eaedff] rounded-md text-[#434655] text-xs font-medium">Desktop</span>
                         </div>
                     </div>
                 </main>
