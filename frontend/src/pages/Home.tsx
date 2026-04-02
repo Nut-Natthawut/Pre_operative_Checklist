@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Search, Users, ArrowRight, Activity, ClipboardList, Zap, Lock } from 'lucide-react';
+import { FileText, Search, Users, ArrowRight, Activity, Zap, Lock } from 'lucide-react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
