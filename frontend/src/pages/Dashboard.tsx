@@ -55,7 +55,7 @@ const CustomDateInput = React.forwardRef<HTMLButtonElement, CustomInputProps>(
             ref={ref}
             onClick={onClick}
             disabled={disabled}
-            className={`bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors w-36 text-left ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-[#f2f3ff] border border-[#c3c6d7]/30 rounded-xl px-3 py-2 text-sm outline-none text-[#434655] cursor-pointer hover:bg-white transition-colors w-36 text-left ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
             {displayValue && displayValue !== '' ? displayValue : <span className="text-gray-400">{placeholder}</span>}
         </button>
@@ -212,17 +212,17 @@ export default function DashboardPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-gray-100">
-                <header className="bg-white shadow-sm">
+            <div className="min-h-screen bg-[#faf8ff] medical-grid">
+                <header className="bg-white/70 backdrop-blur-xl border-b border-[#c3c6d7]/20 sticky top-0 z-40">
                     <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800">รายงานการเตรียมผู้ป่วยก่อนผ่าตัด</h1>
-                            <p className="text-sm text-gray-500">โรงพยาบาลมหาราชนครเชียงใหม่</p>
+                            <h1 className="text-xl font-bold text-[#131b2e]" style={{ fontFamily: "'Inter', sans-serif" }}>รายงานการเตรียมผู้ป่วยก่อนผ่าตัด</h1>
+                            <p className="text-sm text-[#434655]">โรงพยาบาลมหาราชนครเชียงใหม่</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="font-medium text-gray-800">{user?.fullName}</p>
-                                <p className="text-sm text-gray-500">{user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</p>
+                                <p className="font-medium text-[#131b2e]">{user?.fullName}</p>
+                                <p className="text-sm text-[#434655]">{user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</p>
                             </div>
                             <button onClick={logout} className="btn-secondary flex items-center gap-2">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,13 +240,13 @@ export default function DashboardPage() {
                     {/* 2. Main Menu - Action Cards */}
                     <div className="grid gap-6 grid-cols-1">
                         {menuItems.map((item) => (
-                            <Link key={item.href} to={item.href} className="card hover:shadow-lg transition-all duration-300 group border border-transparent hover:border-gray-200 flex items-center p-6 gap-6 relative overflow-hidden">
-                                <div className={`w-16 h-16 ${item.color} rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0 z-10`}>
+                            <Link key={item.href} to={item.href} className="card hover:shadow-xl transition-all duration-300 group border border-[#c3c6d7]/10 hover:border-[#004ac6]/20 flex items-center p-6 gap-6 relative overflow-hidden rounded-[1.5rem]">
+                                <div className={`w-16 h-16 ${item.color} rounded-[1.25rem] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0 z-10`}>
                                     {item.icon}
                                 </div>
                                 <div className="z-10">
-                                    <h2 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-med-teal transition-colors">{item.title}</h2>
-                                    <p className="text-gray-500 text-sm">{item.description}</p>
+                                    <h2 className="text-xl font-bold text-[#131b2e] mb-1 group-hover:text-[#004ac6] transition-colors">{item.title}</h2>
+                                    <p className="text-[#434655] text-sm">{item.description}</p>
                                 </div>
                                 {/* Decor circle */}
                                 <div className={`absolute -right-6 -bottom-6 w-32 h-32 rounded-full opacity-10 ${item.color}`}></div>
@@ -255,17 +255,17 @@ export default function DashboardPage() {
                     </div>
 
                     {/* 3. Recent Logs Table - Data Grid */}
-                    <div className="card overflow-hidden border border-gray-100 shadow-md">
-                        <div className="p-6 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="card overflow-hidden border border-[#c3c6d7]/10 shadow-md rounded-[1.5rem]">
+                        <div className="p-6 border-b border-[#c3c6d7]/10 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-teal-50 rounded-lg text-med-teal">
+                                <div className="p-2 bg-[#004ac6]/5 rounded-xl text-[#004ac6]">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-gray-800">รายการบันทึกล่าสุด</h3>
-                                    <p className="text-xs text-gray-500">Overview of recent patient forms</p>
+                                    <h3 className="text-lg font-bold text-[#131b2e]">รายการบันทึกล่าสุด</h3>
+                                    <p className="text-xs text-[#434655]">Overview of recent patient forms</p>
                                 </div>
                             </div>
 
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                                     <input
                                         type="text"
                                         placeholder="ค้นหา HN..."
-                                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none transition-all placeholder-gray-400"
+                                        className="w-full pl-10 pr-4 py-2 bg-[#f2f3ff] border border-[#c3c6d7]/30 rounded-xl text-sm outline-none transition-all placeholder-[#434655]/50"
                                         style={{ '--tw-ring-color': '#009CA6' } as React.CSSProperties}
                                         value={searchTerm}
                                         onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                                 </div>
 
                                 <select
-                                    className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-600 cursor-pointer hover:bg-white transition-colors"
+                                    className="bg-[#f2f3ff] border border-[#c3c6d7]/30 rounded-xl px-3 py-2 text-sm outline-none text-[#434655] cursor-pointer hover:bg-white transition-colors"
                                     value={limit}
                                     onChange={(e) => handleLimitChange(Number(e.target.value))}
                                     disabled={!!searchTerm}
@@ -389,16 +389,16 @@ export default function DashboardPage() {
                         <div>
                             <table className="w-full text-left text-sm table-fixed">
                                 <thead>
-                                    <tr className="bg-gray-50/50 border-b border-gray-100">
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[12%]">เวลา</th>
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[14%]">HN</th>
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[26%]">ผู้ป่วย</th>
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[10%]">Ward</th>
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[23%]">สถานะ</th>
-                                        <th className="py-4 px-3 md:px-4 font-semibold text-gray-600 w-[15%] text-center whitespace-nowrap">ดำเนินการ</th>
+                                    <tr className="bg-[#f2f3ff]/50 border-b border-[#c3c6d7]/10">
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[12%]">เวลา</th>
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[14%]">HN</th>
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[26%]">ผู้ป่วย</th>
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[10%]">Ward</th>
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[23%]">สถานะ</th>
+                                        <th className="py-4 px-3 md:px-4 font-semibold text-[#434655] w-[15%] text-center whitespace-nowrap">ดำเนินการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-[#c3c6d7]/10">
                                     {isLoadingLogs ? (
                                         <>
                                             <SkeletonTableRow />
@@ -418,15 +418,15 @@ export default function DashboardPage() {
                                             // Date Header
                                             if (dateStr !== prevDateStr) {
                                                 acc.push(
-                                                    <tr key={`header-${dateStr}`} className="bg-gradient-to-r from-teal-50 to-transparent">
+                                                    <tr key={`header-${dateStr}`} className="bg-gradient-to-r from-[#eaedff] to-transparent">
                                                         <td colSpan={6} className="py-3 px-3 md:px-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-med-teal/10 flex items-center justify-center">
-                                                                    <svg className="w-4 h-4 text-med-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <div className="w-8 h-8 rounded-full bg-[#004ac6]/10 flex items-center justify-center">
+                                                                    <svg className="w-4 h-4 text-[#004ac6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                     </svg>
                                                                 </div>
-                                                                <span className="text-sm font-semibold text-med-teal">{dateStr}</span>
+                                                                <span className="text-sm font-semibold text-[#004ac6]">{dateStr}</span>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -435,7 +435,7 @@ export default function DashboardPage() {
 
                                             acc.push(
                                                 <tr key={log.id}
-                                                    className="hover:bg-teal-50/30 transition-colors cursor-pointer group border-l-2 border-transparent hover:border-med-teal"
+                                                    className="hover:bg-[#eaedff]/50 transition-colors cursor-pointer group border-l-2 border-transparent hover:border-[#004ac6]"
                                                     onClick={() => navigate(`/form/${log.id}`)}>
                                                     <td className="py-4 px-3 md:px-4">
                                                         <div className="flex items-center gap-2">
@@ -448,7 +448,7 @@ export default function DashboardPage() {
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-3 md:px-4">
-                                                        <span className="font-bold text-gray-700 group-hover:text-med-teal transition-colors">{log.hn}</span>
+                                                        <span className="font-bold text-gray-700 group-hover:text-[#004ac6] transition-colors">{log.hn}</span>
                                                         {/* Add AN if available in future */}
                                                     </td>
                                                     <td className="py-4 px-3 md:px-4">
@@ -497,7 +497,7 @@ export default function DashboardPage() {
                                                     <td className="py-4 px-3 md:px-4 text-center">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); navigate(`/form/${log.id}`); }}
-                                                            className="inline-flex items-center gap-1.5 px-2 py-1.5 md:px-3 text-med-teal bg-teal-50 hover:bg-med-teal hover:text-white border border-med-teal/30 hover:border-transparent text-xs font-medium rounded-md transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
+                                                            className="inline-flex items-center gap-1.5 px-2 py-1.5 md:px-3 text-[#004ac6] bg-[#004ac6]/5 hover:bg-[#004ac6] hover:text-white border border-[#004ac6]/20 hover:border-transparent text-xs font-medium rounded-lg transition-all duration-200 cursor-pointer shadow-sm hover:shadow"
                                                             title="ดูฟอร์ม"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,7 +527,7 @@ export default function DashboardPage() {
 
                         {/* Pagination Controls */}
                         {!searchTerm && totalCount > 0 && (
-                            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="p-4 border-t border-[#c3c6d7]/10 bg-[#f2f3ff]/50 flex flex-col md:flex-row justify-between items-center gap-4">
                                 <div className="text-sm text-gray-500">
                                     แสดง {startItem}-{endItem} จาก {totalCount} รายการ
                                 </div>
@@ -557,8 +557,8 @@ export default function DashboardPage() {
                                                 key={pageNum}
                                                 onClick={() => goToPage(pageNum)}
                                                 className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                                                    ? 'bg-med-teal text-white'
-                                                    : 'text-gray-600 hover:bg-gray-100'
+                                                    ? 'bg-[#004ac6] text-white'
+                                                    : 'text-[#434655] hover:bg-[#eaedff]'
                                                     }`}
                                             >
                                                 {pageNum}
@@ -578,7 +578,7 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
+                    <div className="mt-8 pt-8 border-t border-[#c3c6d7]/10 text-center text-sm text-[#434655]/50">
                         <p>© 2026 CMU Hospital. All rights reserved.</p>
                         <div className="flex items-center justify-center gap-4 mt-2">
                             <div className="flex items-center gap-2">
