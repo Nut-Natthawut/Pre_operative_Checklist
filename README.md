@@ -1,11 +1,3 @@
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Homepage — Suandok Forms" width="700" />
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/login.png" alt="Login — Suandok Forms" width="350" />
-</p>
-
 <h1 align="center">🏥 Hospital Pre-Operative Checklist System</h1>
 
 <p align="center">
@@ -20,6 +12,27 @@
   <img src="https://img.shields.io/badge/Drizzle_ORM-0.31-C5F74F?logo=drizzle&logoColor=black" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white" />
 </p>
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center" colspan="2"><strong> Homepage</strong></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/homepage.png" alt="Homepage" width="800" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong> Dashboard</strong></td>
+    <td align="center"><strong> Login</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/dashboard.png" alt="Dashboard" width="500" /></td>
+    <td><img src="docs/screenshots/login.png" alt="Login" width="280" /></td>
+  </tr>
+</table>
 
 ---
 
