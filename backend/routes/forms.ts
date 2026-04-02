@@ -470,12 +470,21 @@ formRoutes.put('/:id', async (c) => {
     const formId = c.req.param('id');
     const body = await c.req.json();
     const db = c.get('db');
-    // const currentUser = c.get('user'); // If we want to track who updated
+    const currentUser = c.get('user');
+    const isAdmin = currentUser?.role === 'admin';
 
     // Check if form exists
     const existingForm = await db.select().from(preopForms).where(eq(preopForms.id, formId)).get();
     if (!existingForm) {
       return c.json({ success: false, message: 'ไม่พบข้อมูลฟอร์ม' }, 404);
+    }
+
+    const existingResultOr = existingForm.resultOr ? JSON.parse(existingForm.resultOr) : {};
+    if (!isAdmin && (existingResultOr.complete === true || existingForm.surgeryCompleted === 1)) {
+      return c.json({
+        success: false,
+        message: 'ฟอร์มนี้ถูกล็อกแล้ว ไม่สามารถแก้ไขได้'
+      }, 400);
     }
 
     // Prepare update data (Similar to POST but updating)

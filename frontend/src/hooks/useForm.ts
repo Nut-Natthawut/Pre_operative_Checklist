@@ -25,16 +25,18 @@ interface UseFormReturn {
  * Custom hook for managing form state
  * @param initial - Optional initial form data (for editing existing forms)
  */
-export function useForm(initial?: FormData): UseFormReturn {
+export function useForm(initial?: FormData, disabled = false): UseFormReturn {
     const [formData, setFormData] = useState<FormData>(initial || initialFormData);
 
     // Update a top-level field
     const updateField = useCallback((field: string, value: unknown) => {
+        if (disabled) return;
         setFormData(prev => ({ ...prev, [field]: value }));
-    }, []);
+    }, [disabled]);
 
     // Update a row in the checklist
     const updateRow = useCallback((rowKey: string, field: string, value: unknown) => {
+        if (disabled) return;
         setFormData(prev => ({
             ...prev,
             rows: {
@@ -46,10 +48,11 @@ export function useForm(initial?: FormData): UseFormReturn {
                 }
             }
         }));
-    }, []);
+    }, [disabled]);
 
     // Update inner data (consent, NPO, lab, etc.)
     const updateInner = useCallback((field: string, value: unknown) => {
+        if (disabled) return;
         setFormData(prev => ({
             ...prev,
             innerData: {
@@ -57,10 +60,11 @@ export function useForm(initial?: FormData): UseFormReturn {
                 [field]: value
             }
         }));
-    }, []);
+    }, [disabled]);
 
     // Update result section
     const updateResult = useCallback((field: string, value: unknown) => {
+        if (disabled) return;
         setFormData(prev => ({
             ...prev,
             result: {
@@ -68,10 +72,11 @@ export function useForm(initial?: FormData): UseFormReturn {
                 [field]: value
             }
         }));
-    }, []);
+    }, [disabled]);
 
     // Fill current Thai date in header
     const fillCurrentDate = useCallback(() => {
+        if (disabled) return;
         const { date, month, year } = getCurrentThaiDate();
         setFormData(prev => ({
             ...prev,
@@ -79,7 +84,7 @@ export function useForm(initial?: FormData): UseFormReturn {
             formMonth: month,
             formYear: year
         }));
-    }, []);
+    }, [disabled]);
 
     // Reset form to initial state
     const resetForm = useCallback(() => {

@@ -1,16 +1,14 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
 import { toast } from 'sonner';
 
 // Import shared types and components
 import type { FormData } from '../types/form';
-import { initialFormData } from '../types/form';
 import { PatientInfo, FormHeader, ChecklistRow, FormFooter } from '../components/form';
-import { mapBackendToFormData } from '../services/formService';
-import { thaiMonthsFull, toISODate, getCurrentTime } from '../utils/date';
+import { useForm } from '../hooks/useForm';
+import { loadForm, mapBackendToFormData, updateForm, type BackendFormData } from '../services/formService';
+import { canEditLoadedForm, isFormFieldLocked } from '../utils/formAccess';
 
 // GSAP
 import gsap from 'gsap';
@@ -26,12 +24,20 @@ export default function ViewFormPage() {
     const formId = params.id as string;
 
     // State Declarations
-    const [formData, setFormData] = useState<FormData>(initialFormData);
     const [originalData, setOriginalData] = useState<FormData | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [isEditable, setIsEditable] = useState(false);
+    const {
+        formData,
+        setFormData,
+        updateField,
+        updateRow,
+        updateInner,
+        updateResult,
+        fillCurrentDate
+    } = useForm(undefined, !isEditable);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -65,30 +71,23 @@ export default function ViewFormPage() {
             if (!formId) return;
             setLoading(true);
             try {
-                const response = await api.getForm(formId);
+                const response = await loadForm(formId);
                 if (response.success && response.data) {
-                    const backendData = response.data.form as any;
+                    const backendData = response.data.form as BackendFormData;
 
-                    // Use helper to map backend data to FormData
                     const mappedData = mapBackendToFormData(backendData);
-
-                    // Check if editable:
-                    // 1. If Admin -> Always editable
-                    // 2. If Owner -> Editable if 'Complete' is NOT checked
-                    // 3. Others -> Read only
-                    const resultOr = backendData.resultOr || initialFormData.result;
-                    let canEdit = true;
-
-
-                    if (!isAdmin && resultOr.complete) {
-                        canEdit = false;
-                    }
+                    const canEdit = canEditLoadedForm({
+                        isAdmin,
+                        currentUser: user,
+                        isComplete: backendData.resultOr?.complete,
+                        surgeryCompleted: backendData.surgeryCompleted
+                    });
 
                     setIsEditable(canEdit);
-
-                    // Set form data and original data for locking
                     setFormData(mappedData);
                     setOriginalData(mappedData);
+                } else {
+                    toast.error(response.message || 'ไม่สามารถดึงข้อมูลได้');
                 }
             } catch (err) {
                 console.error(err);
@@ -101,127 +100,20 @@ export default function ViewFormPage() {
         if (isLoggedIn) {
             loadFormData();
         }
-    }, [formId, isLoggedIn, isAdmin, user]);
+    }, [formId, isLoggedIn, isAdmin, user, setFormData]);
 
     // Helpers
 
-    // Helper to check if a field is locked (had value in originalData)
-    // Admin ignores lock (can edit everything)
     const isLocked = (path: string, subPath?: string) => {
-        // Admin can edit everything
-        if (isAdmin) return false;
-
-        // If form is not editable (Completed), everything is locked
-        if (!isEditable) return true;
-
-        if (!originalData) return false;
-
-        if (path === 'rows') {
-            // Usage: isLocked('rows', 'row1.yes') 
-            if (!subPath) return false;
-            // subPath e.g. 'row1.yes'
-            const [rowKey] = subPath.split('.');
-
-            // Check originalData to see if it WAS locked permissions-wise.
-            const originalRow = originalData.rows[rowKey as keyof typeof originalData.rows];
-            if (!originalRow) return false;
-
-            // Row Locking Logic:
-            // Case 1: Empty row (No preparer signature)
-            // -> Editable by ANYONE (First come, first served)
-            if (!originalRow.preparer) return false;
-
-            // Case 2: Row already signed - Check by User ID first (reliable)
-            // Then fall back to name comparison for backward compatibility
-            if (user?.id && originalRow.preparerId === user.id) {
-                return false; // Unlock for me (matched by ID)
-            }
-
-            // Fallback: Compare by name (for data saved before preparerId was added)
-            if (user?.fullName && originalRow.preparer?.trim() === user.fullName?.trim()) {
-                return false; // Unlock for me (matched by name)
-            }
-
-            // Case 3: Signed by someone else
-            // -> Locked for me (Read-only)
-            return true;
-        }
-
-        if (path === 'innerData') {
-            if (!subPath) return false;
-            const val = originalData.innerData[subPath as keyof typeof originalData.innerData];
-            return !!val;
-        }
-
-        if (path === 'result') {
-            if (!subPath) return false;
-            // originalData.result is our structured object
-            const val = (originalData.result as any)[subPath];
-            return !!val;
-        }
-
-        // Top level fields
-        const val = (originalData as any)[path];
-        return !!val;
+        return isFormFieldLocked({
+            isAdmin,
+            isEditable,
+            originalData,
+            currentUser: user,
+            path,
+            subPath
+        });
     };
-    const updateField = (field: string, value: unknown) => {
-        if (!isEditable) return;
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const updateRow = (rowKey: string, field: string, value: unknown) => {
-        if (!isEditable) return;
-        setFormData(prev => ({
-            ...prev,
-            rows: {
-                ...prev.rows,
-                [rowKey]: {
-                    ...(prev.rows as any)[rowKey],
-                    [field]: value
-                }
-            }
-        }));
-    };
-
-    const updateInner = (field: string, value: unknown) => {
-        if (!isEditable) return;
-        setFormData(prev => ({
-            ...prev,
-            innerData: {
-                ...prev.innerData,
-                [field]: value
-            }
-        }));
-    };
-
-    const updateResult = (field: string, value: unknown) => {
-        if (!isEditable) return;
-        setFormData(prev => ({
-            ...prev,
-            result: {
-                ...prev.result,
-                [field]: value
-            }
-        }));
-    };
-
-    const fillCurrentDate = () => {
-        if (!isEditable) return;
-        const now = new Date();
-        const day = now.getDate().toString();
-        const month = thaiMonthsFull[now.getMonth()];
-        const year = (now.getFullYear() + 543).toString();
-        setFormData(prev => ({
-            ...prev,
-            formDate: day,
-            formMonth: month,
-            formYear: year
-        }));
-    };
-
-
-
-
 
     const handleUpdate = () => {
         setShowConfirmModal(true);
@@ -231,61 +123,7 @@ export default function ViewFormPage() {
         setSubmitting(true);
 
         try {
-            // 1. Convert Date using helper
-            const isoDate = toISODate(formData.formDate, formData.formMonth, formData.formYear)
-                || new Date().toISOString().split('T')[0];
-
-            // 2. Prepare Payload
-            const payload = {
-                formDate: isoDate,
-                formTime: getCurrentTime(),
-                ward: formData.ward,
-                hn: formData.hn,
-                an: formData.an,
-                patientName: formData.patientName,
-                sex: formData.sex,
-                age: formData.age,
-                allergy: formData.allergy,
-                bed: formData.bed,
-                attendingPhysician: formData.physician,
-                // Checklists
-                orChecklist: formData.rows,
-                // Inner Data
-                consentData: {
-                    consentAdult: formData.innerData.consentAdult,
-                    consentMarried: formData.innerData.consentMarried,
-                    consentChild: formData.innerData.consentChild,
-                    consentChildGuardian: formData.innerData.consentChildGuardian
-                },
-                npoData: {
-                    npoSolid: formData.innerData.npoSolid,
-                    npoLiquid: formData.innerData.npoLiquid
-                },
-                ivData: {
-                    ivFluidDetail: formData.innerData.ivFluidDetail
-                },
-                anesLab: {
-                    labCbc: formData.innerData.labCbc,
-                    labUa: formData.innerData.labUa,
-                    labElectrolyte: formData.innerData.labElectrolyte,
-                    labPtPtt: formData.innerData.labPtPtt,
-                    labOther: formData.innerData.labOther,
-                    labOtherDetail: formData.innerData.labOtherDetail,
-                    labFilm: formData.innerData.labFilm
-                },
-                riskConditions: {
-                    valuablesRemoved: formData.innerData.valuablesRemoved,
-                    valuablesFixed: formData.innerData.valuablesFixed
-                },
-                premedication: formData.innerData.medsDetail,
-                resultOr: formData.result,
-                otherNotes: JSON.stringify({
-                    diagnosis: formData.diagnosis,
-                    operation: formData.operation
-                })
-            };
-
-            const response = await api.updateForm(formId, payload);
+            const response = await updateForm(formId, formData);
 
             if (response.success) {
                 toast.success('อัปเดตข้อมูลเรียบร้อย');
