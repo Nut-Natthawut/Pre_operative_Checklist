@@ -251,7 +251,7 @@ export default function DashboardPage() {
 
 
                     {/* 2. Main Menu - Action Cards */}
-                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    <div className={`grid gap-6 ${menuItems.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                         {menuItems.map((item) => (
                             <Link key={item.href} to={item.href} className="bg-white hover:shadow-2xl transition-all duration-300 group border border-[#c3c6d7]/10 hover:border-[#004ac6]/15 flex items-center p-6 gap-5 relative overflow-hidden rounded-[1.5rem] shadow-sm hover:-translate-y-1">
                                 <div className={`w-14 h-14 ${item.color} rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300 flex-shrink-0 z-10`}>
