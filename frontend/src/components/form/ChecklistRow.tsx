@@ -244,23 +244,21 @@ export default function ChecklistRow({
                             </span>
                         </div>
 
-                        {/* DatePicker Popup */}
-                        {isDatePickerOpen && (
-                            <div className="absolute z-50 left-1/2 -translate-x-1/2 top-6">
-                                <DatePicker
-                                    selected={parseDate(rowData.date)}
-                                    onChange={handleDateChange}
-                                    onSelect={() => setIsDatePickerOpen(false)}
-                                    locale="th"
-                                    inline
-                                    dateFormat="dd/MM/yyyy"
-                                    showMonthDropdown
-                                    showYearDropdown
-                                    dropdownMode="select"
-                                    onClickOutside={() => setIsDatePickerOpen(false)}
-                                />
-                            </div>
-                        )}
+                        <DatePicker
+                            selected={parseDate(rowData.date)}
+                            onChange={handleDateChange}
+                            onSelect={() => setIsDatePickerOpen(false)}
+                            open={isDatePickerOpen}
+                            locale="th"
+                            dateFormat="dd/MM/yyyy"
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
+                            onClickOutside={() => setIsDatePickerOpen(false)}
+                            portalId="root"
+                            popperPlacement="bottom"
+                            customInput={<span style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />}
+                        />
                     </div>
 
                     {/* Clear buttons */}

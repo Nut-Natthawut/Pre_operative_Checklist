@@ -7,6 +7,52 @@ import { initialFormData } from '../types/form';
 import { toISODate, getCurrentTime, toThaiDate } from '../utils/date';
 import { getAllergyValue, detectAllergyStatus } from '../utils/allergy';
 
+export interface BackendFormData {
+    createdBy?: string | null;
+    surgeryCompleted?: number | null;
+    formDate?: string;
+    patientName?: string;
+    sex?: string;
+    age?: string;
+    allergy?: string | null;
+    ward?: string;
+    hn?: string;
+    an?: string | null;
+    bed?: string | null;
+    attendingPhysician?: string | null;
+    otherNotes?: string | null;
+    orChecklist?: FormData['rows'] | null;
+    resultOr?: FormData['result'] | null;
+    riskConditions?: {
+        valuablesRemoved?: boolean;
+        valuablesFixed?: boolean;
+    } | null;
+    consentData?: {
+        consentAdult?: boolean;
+        consentMarried?: boolean;
+        consentChild?: boolean;
+        consentChildGuardian?: string;
+    } | null;
+    npoData?: {
+        npoSolid?: boolean;
+        npoLiquid?: boolean;
+    } | null;
+    ivData?: {
+        ivFluidDetail?: string;
+    } | null;
+    anesLab?: {
+        labCbc?: boolean;
+        labUa?: boolean;
+        labElectrolyte?: boolean;
+        labPtPtt?: boolean;
+        labOther?: boolean;
+        labOtherDetail?: string;
+        labFilm?: boolean;
+        labEkg?: boolean;
+    } | null;
+    premedication?: string | null;
+}
+
 // ============================================
 // PAYLOAD MAPPING
 // ============================================
@@ -148,7 +194,7 @@ export async function listForms(
  * Used when loading a form from the database
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mapBackendToFormData(backendData: any): FormData {
+export function mapBackendToFormData(backendData: BackendFormData): FormData {
     // Convert Date ISO -> Thai
     const { date: fDate, month: fMonth, year: fYear } = toThaiDate(backendData.formDate || '');
     
