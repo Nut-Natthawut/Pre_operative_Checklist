@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="docs/screenshots/login.png" alt="Pre-Op Checklist System" width="600" />
+  <img src="docs/screenshots/dashboard.png" alt="Homepage — Suandok Forms" width="700" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/login.png" alt="Login — Suandok Forms" width="350" />
 </p>
 
 <h1 align="center">🏥 Hospital Pre-Operative Checklist System</h1>
