@@ -18,17 +18,17 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <strong>🏠 Homepage</strong><br>
+  <strong> Homepage</strong><br>
   <img src="docs/screenshots/homepage.png" alt="Homepage" width="800" />
 </p>
 
 <p align="center">
-  <strong>📊 Dashboard (Patient List & Search)</strong><br>
+  <strong> Dashboard (Patient List & Search)</strong><br>
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
 </p>
 
 <p align="center">
-  <strong>🔐 Login Form</strong><br>
+  <strong> Login Form</strong><br>
   <img src="docs/screenshots/login.png" alt="Login" width="800" />
 </p>
 
@@ -50,18 +50,18 @@ Hospital staff traditionally use **paper-based checklists** before surgery — t
 
 | Feature | Description |
 |---|---|
-| 📝 **Digital Checklist Forms** | 12-item pre-op checklist with Yes/No, timestamp, and preparer tracking |
-| 🔍 **Patient Search** | Instant search by HN (Hospital Number) |
-| 📊 **Live Status Dashboard** | Color-coded status (🔴🟡🟢) with date filtering and pagination |
-| 🔐 **JWT Authentication** | Login with access + refresh token rotation |
-| 👥 **Role-Based Access** | Admin vs. User roles — admins manage users and see all records |
-| 📱 **QR Code Generation** | Each form generates a QR code for quick lookup |
-| ✅ **Surgery Completion** | Mark patients as post-surgery; completed forms auto-hide from active view |
-| 🔒 **Immutable Records** | Submitted forms cannot be edited or deleted (medical compliance) |
+|  **Digital Checklist Forms** | 12-item pre-op checklist with Yes/No, timestamp, and preparer tracking |
+|  **Patient Search** | Instant search by HN (Hospital Number) |
+|  **Live Status Dashboard** | Color-coded status (🔴🟡🟢) with date filtering and pagination |
+|  **JWT Authentication** | Login with access + refresh token rotation |
+|  **Role-Based Access** | Admin vs. User roles — admins manage users and see all records |
+|  **QR Code Generation** | Each form generates a QR code for quick lookup |
+|  **Surgery Completion** | Mark patients as post-surgery; completed forms auto-hide from active view |
+|  **Immutable Records** | Submitted forms cannot be edited or deleted (medical compliance) |
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌──────────────────────────────┐     ┌──────────────────────────────┐
@@ -102,7 +102,7 @@ Hospital staff traditionally use **paper-based checklists** before surgery — t
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```
 Pre_operative_Checklist/
@@ -176,7 +176,7 @@ Pre_operative_Checklist/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -259,7 +259,7 @@ npm run build
 
 ---
 
-## 🔄 CI/CD Pipeline
+##  CI/CD Pipeline
 
 The backend is automatically deployed via **GitHub Actions** whenever code is pushed to `main`.
 
@@ -292,7 +292,7 @@ flowchart LR
 
 ---
 
-## 🛡️ Security
+##  Security
 
 - **JWT Authentication** with short-lived access tokens (8h) and refresh tokens
 - **CORS** restricted to allowed origins only (localhost + `*.vercel.app` + `*.pages.dev`)
@@ -303,7 +303,7 @@ flowchart LR
 
 ---
 
-## 📄 License
+##  License
 
 This project is for educational and demonstration purposes.
 
