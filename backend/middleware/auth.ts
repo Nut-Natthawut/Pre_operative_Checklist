@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono';
 import { verifyToken } from '../lib/password';
-import type { Env, Variables } from '../index';
+import type { Env, Variables } from '../types/app';
 
 type AuthContext = Context<{ Bindings: Env; Variables: Variables }>;
 
