@@ -4,7 +4,7 @@ import { createRefreshToken, createToken, generateId, hashPassword, verifyPasswo
 import type { AppDb, AppUser, Env } from '../types/app';
 import { AppError } from './errors';
 
-export async function loginUser(db: AppDb, env: Env, username: string, password: string) {
+export const loginUser = async (db: AppDb, env: Env, username: string, password: string) => {
   if (!username || !password) {
     throw new AppError(400, 'กรุณากรอก username และ password', 'Username and password are required');
   }
@@ -35,9 +35,9 @@ export async function loginUser(db: AppDb, env: Env, username: string, password:
       fullName: user.fullName
     }
   };
-}
+};
 
-export async function getCurrentUserProfile(db: AppDb, currentUser: AppUser | null) {
+export const getCurrentUserProfile = async (db: AppDb, currentUser: AppUser | null) => {
   if (!currentUser) {
     throw new AppError(401, 'กรุณาเข้าสู่ระบบ', 'Not authenticated');
   }
@@ -53,9 +53,9 @@ export async function getCurrentUserProfile(db: AppDb, currentUser: AppUser | nu
     role: user.role,
     fullName: user.fullName
   };
-}
+};
 
-export async function refreshAccessToken(db: AppDb, env: Env, refreshToken: string) {
+export const refreshAccessToken = async (db: AppDb, env: Env, refreshToken: string) => {
   if (!refreshToken) {
     throw new AppError(400, 'กรุณาส่ง refresh token', 'Refresh token is required');
   }
@@ -77,9 +77,9 @@ export async function refreshAccessToken(db: AppDb, env: Env, refreshToken: stri
     token,
     expiresIn: 7200
   };
-}
+};
 
-export async function initializeAdmin(db: AppDb) {
+export const initializeAdmin = async (db: AppDb) => {
   const existingUsers = await db.select().from(users).limit(1).all();
   if (existingUsers.length > 0) {
     throw new AppError(400, 'มี Admin อยู่แล้ว กรุณาเข้าสู่ระบบ', 'Admin user already exists');
@@ -101,4 +101,4 @@ export async function initializeAdmin(db: AppDb) {
     password: 'admin123',
     note: 'กรุณาเปลี่ยนรหัสผ่านหลังเข้าสู่ระบบ'
   };
-}
+};

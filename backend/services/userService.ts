@@ -4,7 +4,7 @@ import { generateId, hashPassword } from '../lib/password';
 import type { AppDb, AppUser } from '../types/app';
 import { AppError } from './errors';
 
-export async function listUsers(db: AppDb) {
+export const listUsers = async (db: AppDb) => {
   const allUsers = await db
     .select({
       id: users.id,
@@ -20,13 +20,13 @@ export async function listUsers(db: AppDb) {
     users: allUsers,
     count: allUsers.length
   };
-}
+};
 
-export async function createUser(
+export const createUser = async (
   db: AppDb,
   currentUser: AppUser | null,
   payload: { username: string; password: string; fullName: string; role?: string }
-) {
+) => {
   const { username, password, fullName, role = 'user' } = payload;
 
   if (!username || !password || !fullName) {
@@ -65,9 +65,9 @@ export async function createUser(
       createdAt: now
     }
   };
-}
+};
 
-export async function deleteUser(db: AppDb, currentUser: AppUser | null, userId: string) {
+export const deleteUser = async (db: AppDb, currentUser: AppUser | null, userId: string) => {
   if (currentUser?.id === userId) {
     throw new AppError(400, 'ไม่สามารถลบบัญชีตัวเองได้', 'Cannot delete your own account');
   }
@@ -82,4 +82,4 @@ export async function deleteUser(db: AppDb, currentUser: AppUser | null, userId:
     deletedUserId: userId,
     deletedUsername: user.username
   };
-}
+};

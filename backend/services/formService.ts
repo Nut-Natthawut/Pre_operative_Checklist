@@ -13,20 +13,18 @@ const REQUIRED_FORM_FIELDS: Array<keyof FormSubmissionPayload> = [
   'patientName'
 ];
 
-function ensureRequiredFormFields(payload: FormSubmissionPayload) {
+const ensureRequiredFormFields = (payload: FormSubmissionPayload) => {
   for (const field of REQUIRED_FORM_FIELDS) {
     if (!payload[field]) {
       throw new AppError(400, `กรุณากรอก ${field}`, `Missing required field: ${field}`);
     }
   }
-}
+};
 
-function stringifyJsonField(value: Record<string, unknown> | null | undefined) {
-  return value ? JSON.stringify(value) : null;
-}
+const stringifyJsonField = (value: Record<string, unknown> | null | undefined) =>
+  value ? JSON.stringify(value) : null;
 
-function buildFormMutation(payload: FormSubmissionPayload) {
-  return {
+const buildFormMutation = (payload: FormSubmissionPayload) => ({
     formDate: payload.formDate,
     formTime: payload.formTime,
     ward: payload.ward,
@@ -56,21 +54,19 @@ function buildFormMutation(payload: FormSubmissionPayload) {
     otherNotes: payload.otherNotes || null,
     resultOr: stringifyJsonField(payload.resultOr),
     resultAnes: stringifyJsonField(payload.resultAnes)
-  };
-}
+  });
 
-function parseJsonField<T>(value: string | null): T | null {
-  return value ? JSON.parse(value) as T : null;
-}
+const parseJsonField = <T>(value: string | null): T | null =>
+  value ? JSON.parse(value) as T : null;
 
-function calculateFormStatus(form: {
+const calculateFormStatus = (form: {
   resultOr: string | null;
   anesLab: string | null;
   attendingPhysician: string | null;
   orChecklist: string | null;
   consentData: string | null;
   npoData: string | null;
-}) {
+}) => {
   let status: FormStatus = 'red';
   let statusMessage = '';
   const pendingItems: string[] = [];
@@ -123,9 +119,9 @@ function calculateFormStatus(form: {
   }
 
   return { status, statusMessage };
-}
+};
 
-export async function submitForm(db: AppDb, currentUser: AppUser | null, payload: FormSubmissionPayload) {
+export const submitForm = async (db: AppDb, currentUser: AppUser | null, payload: FormSubmissionPayload) => {
   ensureRequiredFormFields(payload);
 
   const now = new Date().toISOString();
@@ -151,9 +147,9 @@ export async function submitForm(db: AppDb, currentUser: AppUser | null, payload
     patientName: payload.patientName,
     createdAt: now
   };
-}
+};
 
-export async function searchForms(db: AppDb, currentUser: AppUser | null, hn: string) {
+export const searchForms = async (db: AppDb, currentUser: AppUser | null, hn: string) => {
   if (!hn) {
     throw new AppError(400, 'กรุณาระบุ HN เพื่อค้นหา', 'Please provide HN parameter for search');
   }
@@ -203,9 +199,9 @@ export async function searchForms(db: AppDb, currentUser: AppUser | null, hn: st
     count: resultsWithStatus.length,
     results: resultsWithStatus
   };
-}
+};
 
-export async function getFormDetail(db: AppDb, formId: string) {
+export const getFormDetail = async (db: AppDb, formId: string) => {
   const form = await db.select().from(preopForms).where(eq(preopForms.id, formId)).get();
 
   if (!form) {
@@ -226,9 +222,9 @@ export async function getFormDetail(db: AppDb, formId: string) {
     resultAnes: parseJsonField(form.resultAnes),
     qrCodeData: parseJsonField(form.qrCodeData)
   };
-}
+};
 
-export async function listForms(db: AppDb, currentUser: AppUser | null, query: FormListQuery) {
+export const listForms = async (db: AppDb, currentUser: AppUser | null, query: FormListQuery) => {
   const offset = (query.page - 1) * query.limit;
   const isAdmin = currentUser?.role === 'admin';
   const conditions: SQL<unknown>[] = [];
@@ -304,9 +300,14 @@ export async function listForms(db: AppDb, currentUser: AppUser | null, query: F
     count: normalizedForms.length,
     forms: normalizedForms
   };
-}
+};
 
-export async function updateForm(db: AppDb, currentUser: AppUser | null, formId: string, payload: FormSubmissionPayload) {
+export const updateForm = async (
+  db: AppDb,
+  currentUser: AppUser | null,
+  formId: string,
+  payload: FormSubmissionPayload
+) => {
   const existingForm = await db.select().from(preopForms).where(eq(preopForms.id, formId)).get();
   if (!existingForm) {
     throw new AppError(404, 'ไม่พบข้อมูลฟอร์ม');
@@ -320,9 +321,9 @@ export async function updateForm(db: AppDb, currentUser: AppUser | null, formId:
 
   await db.update(preopForms).set(buildFormMutation(payload)).where(eq(preopForms.id, formId));
   return { formId };
-}
+};
 
-export async function markSurgeryCompleted(db: AppDb, currentUser: AppUser | null, formId: string) {
+export const markSurgeryCompleted = async (db: AppDb, currentUser: AppUser | null, formId: string) => {
   const form = await db.select().from(preopForms).where(eq(preopForms.id, formId)).get();
   if (!form) {
     throw new AppError(404, 'ไม่พบข้อมูลฟอร์ม', 'Form not found');
@@ -348,4 +349,4 @@ export async function markSurgeryCompleted(db: AppDb, currentUser: AppUser | nul
     .where(eq(preopForms.id, formId));
 
   return { formId };
-}
+};
