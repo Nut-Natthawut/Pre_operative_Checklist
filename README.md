@@ -17,23 +17,20 @@ A real-time checklist system designed to replace paper-based pre-operative prepa
 
 ## Screenshots
 
-<table>
-  <tr>
-    <td align="center">
-      <strong>Homepage</strong><br>
-      <img src="docs/screenshots/homepage.png" alt="Homepage" width="260" />
-    </td>
-    <td align="center">
-      <strong>Dashboard</strong><br>
-      <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="260" />
-    </td>
-    <td align="center">
-      <strong>Login</strong><br>
-      <img src="docs/screenshots/login.png" alt="Login" width="260" />
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <strong>Homepage</strong><br>
+  <img src="docs/screenshots/homepage.png" alt="Homepage" width="650" />
+</p>
 
+<p align="center">
+  <strong>Dashboard (Patient List & Search)</strong><br>
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="650" />
+</p>
+
+<p align="center">
+  <strong>Login Form</strong><br>
+  <img src="docs/screenshots/login.png" alt="Login" width="650" />
+</p>
 
 ## Overview
 
