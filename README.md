@@ -1,4 +1,4 @@
-<h1 align="center">🏥 Hospital Pre-Operative Checklist System</h1>
+<h1 align="center">Hospital Pre-Operative Checklist System</h1>
 
 <p align="center">
   A full-stack web application for managing <strong>pre-operative patient preparation checklists</strong> — digitizing the surgical readiness workflow for nursing staff.
@@ -15,44 +15,44 @@
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <p align="center">
-  <strong> Homepage</strong><br>
+  <strong>Homepage</strong><br>
   <img src="docs/screenshots/homepage.png" alt="Homepage" width="800" />
 </p>
 
 <p align="center">
-  <strong> Dashboard (Patient List & Search)</strong><br>
+  <strong>Dashboard (Patient List & Search)</strong><br>
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
 </p>
 
 <p align="center">
-  <strong> Login Form</strong><br>
+  <strong>Login Form</strong><br>
   <img src="docs/screenshots/login.png" alt="Login" width="800" />
 </p>
 
 ---
 
-## 📋 Overview
+## Overview
 
 Hospital staff traditionally use **paper-based checklists** before surgery — tracking patient identity, lab results, consent forms, IV lines, medications, and more. This system replaces that paper process with a **real-time digital workflow**.
 
 **Key workflow:**
 1. Nurse creates a new pre-op form for a patient (by HN / Hospital Number)
 2. Each checklist item is checked off with timestamp and preparer name
-3. Dashboard shows live status: 🔴 Not Started → 🟡 In Progress → 🟢 Ready for Surgery
+3. Dashboard shows live status from Not Started to In Progress and Ready for Surgery.
 4. After surgery, the form is marked as complete and archived
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
 |  **Digital Checklist Forms** | 12-item pre-op checklist with Yes/No, timestamp, and preparer tracking |
 |  **Patient Search** | Instant search by HN (Hospital Number) |
-|  **Live Status Dashboard** | Color-coded status (🔴🟡🟢) with date filtering and pagination |
+|  **Live Status Dashboard** | Color-coded status with date filtering and pagination |
 |  **JWT Authentication** | Login with access + refresh token rotation |
 |  **Role-Based Access** | Admin vs. User roles — admins manage users and see all records |
 |  **QR Code Generation** | Each form generates a QR code for quick lookup |
@@ -61,7 +61,7 @@ Hospital staff traditionally use **paper-based checklists** before surgery — t
 
 ---
 
-##  Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────┐     ┌──────────────────────────────┐
@@ -102,7 +102,7 @@ Hospital staff traditionally use **paper-based checklists** before surgery — t
 
 ---
 
-##  Project Structure
+## Project Structure
 
 ```
 Pre_operative_Checklist/
@@ -150,33 +150,33 @@ Pre_operative_Checklist/
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 **How to read this table:**
 
 - **Method** — The HTTP verb: `GET` = read data, `POST` = create new data, `PATCH` = update partial data
 - **Endpoint** — The URL path to call (e.g. `http://localhost:8787/api/auth/login`)
-- **Auth** — `Public` = anyone can call without logging in, `🔐 Required` = must send a JWT token (login first)
+- **Auth** — `Public` = anyone can call without logging in, `Required` = must send a JWT token after login
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
 | `POST` | `/api/auth/init` | Create first admin user | Public |
 | `POST` | `/api/auth/login` | Login → get tokens | Public |
 | `POST` | `/api/auth/refresh` | Refresh access token | Public |
-| `GET` | `/api/auth/me` | Get current user info | 🔐 Required |
-| `GET` | `/api/forms` | List forms (paginated, filterable) | 🔐 Required |
-| `POST` | `/api/forms` | Submit new pre-op form | 🔐 Required |
-| `GET` | `/api/forms/search?hn=` | Search forms by HN | 🔐 Required |
-| `GET` | `/api/forms/:id` | Get form by ID | 🔐 Required |
-| `PATCH` | `/api/forms/:id/surgery-completed` | Mark surgery as done | 🔐 Required |
-| `GET` | `/api/users` | List all users (admin only) | 🔐 Required |
-| `POST` | `/api/users` | Create new user (admin only) | 🔐 Required |
+| `GET` | `/api/auth/me` | Get current user info | Required |
+| `GET` | `/api/forms` | List forms (paginated, filterable) | Required |
+| `POST` | `/api/forms` | Submit new pre-op form | Required |
+| `GET` | `/api/forms/search?hn=` | Search forms by HN | Required |
+| `GET` | `/api/forms/:id` | Get form by ID | Required |
+| `PATCH` | `/api/forms/:id/surgery-completed` | Mark surgery as done | Required |
+| `GET` | `/api/users` | List all users (admin only) | Required |
+| `POST` | `/api/users` | Create new user (admin only) | Required |
 
 > **Note:** There is no self-registration. Only admins can create new user accounts via `/api/users` or the Admin panel in the UI. Auth endpoints (`login`, `refresh`, `init`) are public because users need to access them *before* they have a token.
 
 ---
 
-##  Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -228,11 +228,11 @@ curl -X POST http://localhost:8787/api/auth/init
 
 Default credentials: `admin` / `admin123`
 
-> ⚠️ **Change the password after first login.**
+>  **Change the password after first login.**
 
 ---
 
-## 📦 Deployment
+## Deployment
 
 ### Backend → Cloudflare Workers (Manual)
 
@@ -259,7 +259,7 @@ npm run build
 
 ---
 
-##  CI/CD Pipeline
+## CI/CD Pipeline
 
 The backend is automatically deployed via **GitHub Actions** whenever code is pushed to `main`.
 
@@ -268,8 +268,8 @@ flowchart LR
     A["Push to main"] --> B{"backend/ changed?"}
     B -- Yes --> C["Install deps"]
     C --> D["wrangler deploy"]
-    D --> E["✅ Live on Cloudflare Workers"]
-    B -- No --> F["⏭️ Skip"]
+    D --> E["Live on Cloudflare Workers"]
+    B -- No --> F["Skip"]
 ```
 
 ### How it works
@@ -292,7 +292,7 @@ flowchart LR
 
 ---
 
-##  Security
+## Security
 
 - **JWT Authentication** with short-lived access tokens (8h) and refresh tokens
 - **CORS** restricted to allowed origins only (localhost + `*.vercel.app` + `*.pages.dev`)
@@ -303,12 +303,13 @@ flowchart LR
 
 ---
 
-##  License
+## License
 
 This project is for educational and demonstration purposes.
 
 ---
 
 <p align="center">
-  Built with ❤️ using React, Hono, and Cloudflare Workers
+  Built with React, Hono, and Cloudflare Workers.
 </p>
+
