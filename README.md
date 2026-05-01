@@ -1,4 +1,4 @@
-# Hospital Pre-Operative Checklist System
+<h1 align="center">Hospital Pre-Operative Checklist System</h1>
 
 <p align="center">
   A full-stack web application for managing <strong>pre-operative patient preparation checklists</strong> by digitizing the surgical readiness workflow for hospital staff.
