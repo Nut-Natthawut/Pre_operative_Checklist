@@ -65,8 +65,22 @@ export const preopForms = sqliteTable('preop_forms', {
   createdBy: text('created_by').notNull(),
 });
 
+export const auditLogs = sqliteTable('audit_logs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id'),
+  username: text('username'),
+  action: text('action').notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: text('entity_id'),
+  formId: text('form_id'),
+  details: text('details').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type PreopForm = typeof preopForms.$inferSelect;
 export type NewPreopForm = typeof preopForms.$inferInsert;
+export type AuditLogRow = typeof auditLogs.$inferSelect;
+export type NewAuditLogRow = typeof auditLogs.$inferInsert;

@@ -4,6 +4,7 @@ import { generateId } from '../lib/password';
 import type { AppDb, AppUser } from '../types/app';
 import type { FormListQuery, FormSearchResult, FormStatus, FormSubmissionPayload } from '../types/forms';
 import { AppError } from './errors';
+import { buildAuditSummary, diffAuditValues, writeAuditLog } from './auditService';
 
 const REQUIRED_FORM_FIELDS: Array<keyof FormSubmissionPayload> = [
   'formDate',
@@ -58,6 +59,155 @@ const buildFormMutation = (payload: FormSubmissionPayload) => ({
 
 const parseJsonField = <T>(value: string | null): T | null =>
   value ? JSON.parse(value) as T : null;
+
+const FORM_FIELD_LABELS: Record<string, string> = {
+  formDate: 'Form Date',
+  formTime: 'Form Time',
+  ward: 'Ward',
+  timeField: 'Header Time',
+  preparer: 'Header Preparer',
+  hn: 'HN',
+  an: 'AN',
+  patientName: 'Patient Name',
+  sex: 'Sex',
+  age: 'Age',
+  dob: 'Date of Birth',
+  department: 'Department',
+  weight: 'Weight',
+  rightSide: 'Right Side',
+  allergy: 'Allergy',
+  attendingPhysician: 'Attending Physician',
+  bed: 'Bed',
+  premedication: 'Premedication',
+  otherNotes: 'Other Notes',
+  qrCodeData: 'QR Code Data',
+  surgeryCompleted: 'Surgery Completed',
+  surgeryCompletedAt: 'Surgery Completed At',
+  surgeryCompletedBy: 'Surgery Completed By'
+};
+
+const FORM_SECTION_LABELS: Record<string, string> = {
+  orChecklist: 'OR Checklist',
+  anesChecklist: 'Anes Checklist',
+  anesLab: 'Anes Lab',
+  consultMed: 'Consult Med',
+  riskConditions: 'Risk Conditions',
+  consentData: 'Consent',
+  npoData: 'NPO',
+  ivData: 'IV Data',
+  resultOr: 'OR Result',
+  resultAnes: 'Anes Result'
+};
+
+const FORM_VALUE_LABELS: Record<string, string> = {
+  yes: 'Yes',
+  no: 'No',
+  time: 'Time',
+  date: 'Date',
+  preparer: 'Preparer',
+  preparerId: 'Preparer ID',
+  checker: 'Checker',
+  checkTime: 'Check Time',
+  checkDate: 'Check Date',
+  complete: 'Complete',
+  notComplete: 'Not Complete'
+};
+
+const formatAuditPathLabel = (path: string) => {
+  const segments = path.split('.');
+  const [first, ...rest] = segments;
+  const head = FORM_SECTION_LABELS[first] || FORM_FIELD_LABELS[first] || first;
+
+  if (rest.length === 0) {
+    return head;
+  }
+
+  const tail = rest
+    .map((segment) => {
+      if (FORM_VALUE_LABELS[segment]) {
+        return FORM_VALUE_LABELS[segment];
+      }
+
+      if (/^row\d/.test(segment)) {
+        return segment.replace('_', '.');
+      }
+
+      return segment;
+    })
+    .join(' - ');
+
+  return `${head} - ${tail}`;
+};
+
+const mapAuditLabels = <T extends { path: string; label: string }>(changes: T[]) =>
+  changes.map((change) => ({
+    ...change,
+    label: formatAuditPathLabel(change.path)
+  }));
+
+const buildFormAuditSnapshotFromPayload = (payload: FormSubmissionPayload) => ({
+  formDate: payload.formDate,
+  formTime: payload.formTime,
+  ward: payload.ward,
+  timeField: payload.timeField || null,
+  preparer: payload.preparer || null,
+  hn: payload.hn,
+  an: payload.an || null,
+  patientName: payload.patientName,
+  sex: payload.sex || null,
+  age: payload.age || null,
+  dob: payload.dob || null,
+  department: payload.department || null,
+  weight: payload.weight || null,
+  rightSide: payload.rightSide || null,
+  allergy: payload.allergy || null,
+  attendingPhysician: payload.attendingPhysician || null,
+  bed: payload.bed || null,
+  orChecklist: payload.orChecklist || null,
+  anesChecklist: payload.anesChecklist || null,
+  anesLab: payload.anesLab || null,
+  consultMed: payload.consultMed || null,
+  riskConditions: payload.riskConditions || null,
+  consentData: payload.consentData || null,
+  npoData: payload.npoData || null,
+  ivData: payload.ivData || null,
+  premedication: payload.premedication || null,
+  otherNotes: payload.otherNotes || null,
+  resultOr: payload.resultOr || null,
+  resultAnes: payload.resultAnes || null
+});
+
+const buildFormAuditSnapshotFromRow = (form: typeof preopForms.$inferSelect) => ({
+  formDate: form.formDate,
+  formTime: form.formTime,
+  ward: form.ward,
+  timeField: form.timeField,
+  preparer: form.preparer,
+  hn: form.hn,
+  an: form.an,
+  patientName: form.patientName,
+  sex: form.sex,
+  age: form.age,
+  dob: form.dob,
+  department: form.department,
+  weight: form.weight,
+  rightSide: form.rightSide,
+  allergy: form.allergy,
+  attendingPhysician: form.attendingPhysician,
+  bed: form.bed,
+  orChecklist: parseJsonField(form.orChecklist),
+  anesChecklist: parseJsonField(form.anesChecklist),
+  anesLab: parseJsonField(form.anesLab),
+  consultMed: parseJsonField(form.consultMed),
+  riskConditions: parseJsonField(form.riskConditions),
+  consentData: parseJsonField(form.consentData),
+  npoData: parseJsonField(form.npoData),
+  ivData: parseJsonField(form.ivData),
+  premedication: form.premedication,
+  otherNotes: form.otherNotes,
+  resultOr: parseJsonField(form.resultOr),
+  resultAnes: parseJsonField(form.resultAnes)
+});
 
 const calculateFormStatus = (form: {
   resultOr: string | null;
@@ -139,6 +289,21 @@ export const submitForm = async (db: AppDb, currentUser: AppUser | null, payload
     qrCodeData,
     createdAt: now,
     createdBy: currentUser?.id || 'unknown'
+  });
+
+  await writeAuditLog(db, {
+    userId: currentUser?.id || null,
+    username: currentUser?.username || null,
+    action: 'form.create',
+    entityType: 'form',
+    entityId: formId,
+    formId,
+    details: {
+      summary: 'Created new form',
+      hn: payload.hn,
+      patientName: payload.patientName,
+      ward: payload.ward
+    }
   });
 
   return {
@@ -319,7 +484,27 @@ export const updateForm = async (
     throw new AppError(400, 'ฟอร์มนี้ถูกล็อกแล้ว ไม่สามารถแก้ไขได้');
   }
 
+  const previousSnapshot = buildFormAuditSnapshotFromRow(existingForm);
+  const nextSnapshot = buildFormAuditSnapshotFromPayload(payload);
+
   await db.update(preopForms).set(buildFormMutation(payload)).where(eq(preopForms.id, formId));
+
+  const changes = mapAuditLabels(diffAuditValues(previousSnapshot, nextSnapshot));
+  if (changes.length > 0) {
+    await writeAuditLog(db, {
+      userId: currentUser?.id || null,
+      username: currentUser?.username || null,
+      action: 'form.update',
+      entityType: 'form',
+      entityId: formId,
+      formId,
+      details: {
+        summary: buildAuditSummary(changes),
+        changes
+      }
+    });
+  }
+
   return { formId };
 };
 
@@ -347,6 +532,21 @@ export const markSurgeryCompleted = async (db: AppDb, currentUser: AppUser | nul
       surgeryCompletedBy: currentUser?.id || 'unknown'
     })
     .where(eq(preopForms.id, formId));
+
+  await writeAuditLog(db, {
+    userId: currentUser?.id || null,
+    username: currentUser?.username || null,
+    action: 'form.surgery_completed',
+    entityType: 'form',
+    entityId: formId,
+    formId,
+    details: {
+      summary: 'Marked surgery completed',
+      hn: form.hn,
+      patientName: form.patientName,
+      surgeryCompleted: true
+    }
+  });
 
   return { formId };
 };
