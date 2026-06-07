@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import authRoutes from '../routes/auth';
+import auditLogsRoute from '../routes/auditLogs';
 import formRoutes from '../routes/forms';
 import userRoutes from '../routes/users';
 import { AppError } from '../services/errors';
@@ -55,6 +56,7 @@ export function createApp() {
   );
 
   app.route('/api/auth', authRoutes);
+  app.route('/api/audit-logs', auditLogsRoute);
   app.route('/api/users', userRoutes);
   app.route('/api/forms', formRoutes);
 

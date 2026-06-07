@@ -268,6 +268,66 @@ class ApiClient {
       }>;
     }>(url);
   }
+
+  async markSurgeryCompleted(formId: string) {
+    return this.request<{
+      formId: string;
+    }>(`/api/forms/${formId}/surgery-completed`, {
+      method: 'PATCH',
+    });
+  }
+
+  async getAuditLogs(page = 1, limit = 20) {
+    return this.request<{
+      items: Array<{
+        id: string;
+        userId: string | null;
+        username: string | null;
+        action: 'auth.login' | 'form.create' | 'form.update' | 'form.surgery_completed' | 'user.create' | 'user.delete';
+        entityType: 'auth' | 'form' | 'user';
+        entityId: string | null;
+        formId: string | null;
+        details: {
+          summary: string;
+          changes?: Array<{
+            path: string;
+            label: string;
+            oldValue: unknown;
+            newValue: unknown;
+          }>;
+          [key: string]: unknown;
+        };
+        summary: string;
+        createdAt: string;
+      }>;
+      page: number;
+      limit: number;
+      totalCount: number;
+    }>(`/api/audit-logs?page=${page}&limit=${limit}`);
+  }
+
+  async getAuditLog(id: string) {
+    return this.request<{
+      id: string;
+      userId: string | null;
+      username: string | null;
+      action: 'auth.login' | 'form.create' | 'form.update' | 'form.surgery_completed' | 'user.create' | 'user.delete';
+      entityType: 'auth' | 'form' | 'user';
+      entityId: string | null;
+      formId: string | null;
+      details: {
+        summary: string;
+        changes?: Array<{
+          path: string;
+          label: string;
+          oldValue: unknown;
+          newValue: unknown;
+        }>;
+        [key: string]: unknown;
+      };
+      createdAt: string;
+    }>(`/api/audit-logs/${id}`);
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

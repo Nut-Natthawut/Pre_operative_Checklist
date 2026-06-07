@@ -166,6 +166,17 @@ export default function DashboardPage() {
             ),
             color: 'bg-[#009CA6] hover:bg-[#007a82]',
         },
+        {
+            title: 'Audit Logs',
+            description: 'ตรวจสอบว่าใครเปลี่ยนข้อมูลอะไร เมื่อไหร่',
+            href: '/audit-logs',
+            icon: (
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6m3 6V7m3 10v-3m5 6H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2z" />
+                </svg>
+            ),
+            color: 'bg-gradient-to-br from-[#0f766e] to-[#14b8a6]',
+        },
     ];
 
     if (isAdmin) {

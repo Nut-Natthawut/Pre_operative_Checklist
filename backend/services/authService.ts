@@ -3,6 +3,7 @@ import { users } from '../db/schema';
 import { createRefreshToken, createToken, generateId, hashPassword, verifyPassword, verifyToken } from '../lib/password';
 import type { AppDb, AppUser, Env } from '../types/app';
 import { AppError } from './errors';
+import { writeAuditLog } from './auditService';
 
 export const loginUser = async (db: AppDb, env: Env, username: string, password: string) => {
   if (!username || !password) {
@@ -23,6 +24,19 @@ export const loginUser = async (db: AppDb, env: Env, username: string, password:
   const userPayload = { id: user.id, username: user.username, role: user.role };
   const token = await createToken(userPayload, secret);
   const refreshToken = await createRefreshToken(userPayload, secret);
+
+  await writeAuditLog(db, {
+    userId: user.id,
+    username: user.username,
+    action: 'auth.login',
+    entityType: 'auth',
+    entityId: user.id,
+    formId: null,
+    details: {
+      summary: 'User logged in',
+      role: user.role
+    }
+  });
 
   return {
     token,
