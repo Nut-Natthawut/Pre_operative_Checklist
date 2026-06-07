@@ -10,6 +10,7 @@ import FormView from './pages/FormView';
 import SearchPage from './pages/Search';
 import AdminUsersPage from './pages/AdminUsers';
 import Homepage from './pages/Home';
+import AuditLogsPage from './pages/AuditLogs';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/form/new" element={<FormNew />} />
           <Route path="/form/:id" element={<FormView />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/audit-logs" element={<AuditLogsPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Routes>
         <Toaster richColors position="top-center" />

@@ -3,6 +3,7 @@ import { users } from '../db/schema';
 import { generateId, hashPassword } from '../lib/password';
 import type { AppDb, AppUser } from '../types/app';
 import { AppError } from './errors';
+import { writeAuditLog } from './auditService';
 
 export const listUsers = async (db: AppDb) => {
   const allUsers = await db
@@ -56,6 +57,21 @@ export const createUser = async (
     createdBy: currentUser?.id || null
   });
 
+  await writeAuditLog(db, {
+    userId: currentUser?.id || null,
+    username: currentUser?.username || null,
+    action: 'user.create',
+    entityType: 'user',
+    entityId: userId,
+    formId: null,
+    details: {
+      summary: 'Created user account',
+      createdUsername: username,
+      role,
+      fullName
+    }
+  });
+
   return {
     user: {
       id: userId,
@@ -78,6 +94,22 @@ export const deleteUser = async (db: AppDb, currentUser: AppUser | null, userId:
   }
 
   await db.delete(users).where(eq(users.id, userId));
+
+  await writeAuditLog(db, {
+    userId: currentUser?.id || null,
+    username: currentUser?.username || null,
+    action: 'user.delete',
+    entityType: 'user',
+    entityId: user.id,
+    formId: null,
+    details: {
+      summary: 'Deleted user account',
+      deletedUsername: user.username,
+      role: user.role,
+      fullName: user.fullName
+    }
+  });
+
   return {
     deletedUserId: userId,
     deletedUsername: user.username
